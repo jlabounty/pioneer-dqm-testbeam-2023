@@ -1,5 +1,5 @@
 import dash
-from dash import Dash, html, dcc
+from dash import Dash, html, dcc, ctx
 from dash import Dash, dcc, html, Input, Output, callback
 import plotly 
 import zmq
@@ -28,6 +28,7 @@ app.layout = html.Div([
     html.H1('Multi-page app with Dash Pages'),
     html.Div([
         daq.BooleanSwitch(id='do-update', on=True,label='Update Data'),
+        html.Button('Update Now', id='do-update-now'),
         dcc.Slider(
                 id='update-rate',
                 min=1,
@@ -54,11 +55,12 @@ def update_refresh_rate(rate):
 @callback(Output('traces', 'data'),
         Input('update-data', 'n_intervals'), 
         Input('do-update', 'on'),
+        Input('do-update-now', 'n_clicks'), 
         Input('traces', 'data'),
 )
-def update_traces(n, do_update, existing_data, socket=socket):
+def update_traces(n, do_update, do_update_now, existing_data, socket=socket):
     # print(type(existing_data))
-    if(do_update):
+    if(do_update or ctx.triggered_id == 'do-update-now'):
         # TODO: Make robust against timeout/other error
         data = helpers.read_from_socket(socket,message='TRACES')
         return helpers.process_raw(data)
@@ -73,7 +75,7 @@ def update_traces(n, do_update, existing_data, socket=socket):
 )
 def update_constants(n, do_update, existing_data, button_clicks, socket=socket):
     # print(type(existing_data))
-    if(do_update):
+    if(do_update or ctx.triggered_id == 'update-constants-now'):
         # TODO: Make robust against timeout/other error
         data = helpers.read_from_socket(socket, message='CONST')
         return data

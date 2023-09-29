@@ -36,6 +36,7 @@ def process_raw(data):
         output['traces'][i] = [x-ped for x in trace]
         output['integrals'].append(np.sum(output['traces'][i]))
 
+    output['t0_trace'] = output['traces_raw'][0] #just pick a random trace
     output['hod_x'] = 0,output['n_hodo']
     output['hod_y'] = output['n_hodo'], 2*output['n_hodo']
     output['lyso']  = 2*output['n_hodo'], 2*output['n_hodo'] + output['n_lyso']
