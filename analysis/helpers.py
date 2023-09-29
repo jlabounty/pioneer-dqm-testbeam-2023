@@ -53,6 +53,11 @@ def process_raw(data):
 def find_pedestal(trace, n=5):
     return int(np.average(trace[:n]))
 
+def get_integral(trace,ped=None):
+    if ped is None:
+        ped = find_pedestal(trace)
+    return np.sum( [x-ped for x in trace] )
+
 def get_highest_index(integrals, r1=0, r2=-1):
     maxi = np.max(integrals[r1:r2])
     return integrals.index(maxi)

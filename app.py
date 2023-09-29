@@ -29,6 +29,7 @@ app.layout = html.Div([
     html.Div([
         daq.BooleanSwitch(id='do-update', on=True,label='Update Data'),
         html.Button('Update Now', id='do-update-now'),
+        html.Button('Reset Histograms', id='reset-histograms'),
         dcc.Slider(
                 id='update-rate',
                 min=1,
@@ -56,13 +57,17 @@ def update_refresh_rate(rate):
         Input('update-data', 'n_intervals'), 
         Input('do-update', 'on'),
         Input('do-update-now', 'n_clicks'), 
+        Input('reset-histograms', 'n_clicks'), 
         Input('traces', 'data'),
 )
-def update_traces(n, do_update, do_update_now, existing_data, socket=socket):
+def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, socket=socket):
     # print(type(existing_data))
-    if(do_update or ctx.triggered_id == 'do-update-now'):
+    if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
         # TODO: Make robust against timeout/other error
-        data = helpers.read_from_socket(socket,message='TRACES')
+        message='TRACES'
+        if( ctx.triggered_id == 'reset-histograms' ):
+            message = 'RESETHIST'
+        data = helpers.read_from_socket(socket,message=message)
         return helpers.process_raw(data)
     else:
         return existing_data
@@ -81,6 +86,8 @@ def update_constants(n, do_update, existing_data, button_clicks, socket=socket):
         return data
     else:
         return existing_data
+
+
 
 # @callback(Output('store-dump', 'children'), Input('traces', 'data'))
 # def update_header(data):

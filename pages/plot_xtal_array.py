@@ -116,6 +116,14 @@ def update_hodo(data):
         row = 2, col=2
     )
 
+    fig.add_trace(
+        go.Scatter(
+            x=[data['odb']['odb_x']],
+            y=[data['odb']['odb_y']],
+        ),
+        row=2, col=2
+    )
+
 
 
     return fig

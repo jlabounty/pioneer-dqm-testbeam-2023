@@ -1,0 +1,35 @@
+# TRACES
+{
+    'run':int,      # run number of this event
+    'subrun':int,   # subrun number of this event
+    'event':int,    # event number of this event
+    'n_t0':int,     # number of t0 channels
+    'n_hodo_x':int, # number of hodoscope X channels
+    'n_hodo_y':int, # number of hodoscope Y channels
+    'n_lyso':int,   # number of lyso channels
+    'n_nai':int,    # number of NaI channels
+    'range_t0':tuple(int,int),     # range of the 'traces' array for the t0 channels
+    'range_hodo_x':tuple(int,int), # range of the 'traces' array for the hodoscope X channels
+    'range_hodo_y':tuple(int,int), # range of the 'traces' array for the hodoscope Y channels
+    'range_lyso':tuple(int,int),   # range of the 'traces' array for the lyso channels
+    'range_nai':tuple(int,int),    # range of the 'traces' array for the NaI channels
+    'traces':list[list[int]], # an array of raw traces
+    'histograms':{
+        'hodo':array(n_hodo_x, n_hodo_y), # integrated hodoscope energy
+        'xtal':array(xtal_shape), # integrated xtal array energy histogram, shape something like
+                                  # ..AAAAAA.. 
+                                  # D.112233.C
+                                  # D44556677C
+                                  # D.889900.C
+                                  # ..BBBBBB.. 
+    }, #event by event histograms
+    'odb':{
+        'odb_x':float, #position of the table in x
+        'odb_y':float, #position of the table in y
+    } # parameters from the odb
+}
+
+# CONST
+{
+    'constants':list[float] # same order as 'traces' array above
+}
