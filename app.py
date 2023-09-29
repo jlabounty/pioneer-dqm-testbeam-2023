@@ -18,12 +18,13 @@ socket.connect("tcp://localhost:5555")
 
 app.layout = html.Div([
     dcc.Store(id='traces'),
-    dcc.Store(id='traces-processed'),
+    dcc.Store(id='constants'),
     dcc.Interval(id = 'update-data',
                  interval=10*1000, # in milliseconds
                  n_intervals=0),
-    # dcc.
-
+    dcc.Interval(id = 'update-constants',
+                interval=100*1000, # in milliseconds
+                n_intervals=0),
     html.H1('Multi-page app with Dash Pages'),
     html.Div([
         daq.BooleanSwitch(id='do-update', on=True,label='Update Data'),
@@ -55,19 +56,27 @@ def update_refresh_rate(rate):
         Input('do-update', 'on'),
         Input('traces', 'data'),
 )
-def update_metrics(n, do_update, existing_data):
+def update_traces(n, do_update, existing_data, socket=socket):
     # print(type(existing_data))
     if(do_update):
-        # TODO: make this robust against timeout
-        socket.send_string("Hello")
-        # dicti = {'n':n}
-        message = socket.recv().decode()
+        # TODO: Make robust against timeout/other error
+        data = helpers.read_from_socket(socket,message='TRACES')
+        return helpers.process_raw(data)
+    else:
+        return existing_data
 
-        # print(f"Received reply: {message[:10]}...{message[-10:]}")
-        dicti = json.loads(message)
-        # print('type dicti:', type(dicti))
-        # print(dicti[:10])
-        return helpers.process_raw(ast.literal_eval(dicti))
+@callback(Output('constants', 'data'),
+        Input('update-constants', 'n_intervals'), 
+        Input('do-update', 'on'),
+        Input('update-constants-now', 'n_clicks'),
+        Input('constants', 'data'),
+)
+def update_constants(n, do_update, existing_data, button_clicks, socket=socket):
+    # print(type(existing_data))
+    if(do_update):
+        # TODO: Make robust against timeout/other error
+        data = helpers.read_from_socket(socket, message='CONST')
+        return data
     else:
         return existing_data
 
