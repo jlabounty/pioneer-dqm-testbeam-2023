@@ -99,14 +99,22 @@ def update_hodo(data):
 
     fig.add_trace(
         go.Bar({
-            'x':list(range(data['n_hodo'])),
-            'y':data['integrals'][data['hod_y'][0]:data['hod_y'][1]],
+            'y':list(range(data['n_hodo']))[::-1],
+            'x':data['integrals'][data['hod_y'][0]:data['hod_y'][1]],
             },
             orientation='h'
         ),
         row = 2, col=1
     )
 
+    arri = np.zeros((data['n_hodo'], data['n_hodo']), dtype=int)
+    for i in range(data['n_hodo']):
+        arri[:,i] += data['integrals'][data['hod_x'][0]+i]
+        arri[i,:] += data['integrals'][data['hod_y'][0]+i]
+    fig.add_trace(
+        px.imshow(arri[::-1,:]).data[0],
+        row = 2, col=2
+    )
 
 
 

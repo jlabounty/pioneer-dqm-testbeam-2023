@@ -39,6 +39,7 @@ while True:
     for i in range(n_hodo):
         traces.append( make_trace(has_pulse=(i==x_location)) )
     for i in range(n_hodo):
+        # traces.append( make_trace() )
         traces.append( make_trace(has_pulse=(i==y_location)) )
     for i in range(n_lyso):
         traces.append( make_trace() )

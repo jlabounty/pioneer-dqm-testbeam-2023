@@ -28,6 +28,12 @@ def process_raw(data):
     output['hod_y'] = output['n_hodo'], 2*output['n_hodo']
     output['lyso']  = 2*output['n_hodo'], 2*output['n_hodo'] + output['n_lyso']
     output['nai']  = 2*output['n_hodo'] + output['n_lyso'], len(output['traces'])
+    print(
+        output['hod_x'],
+        output['hod_y'],
+        output['lyso'],
+        output['nai'],
+    )
     return output
 
 

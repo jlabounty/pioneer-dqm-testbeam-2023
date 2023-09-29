@@ -13,9 +13,9 @@ dash.register_page(__name__)
 
 layout = html.Div([
     html.H4('Plot an array of traces'),
-    html.Div([
-        dcc.Graph(id="hodo-traces"),
-    ]),
+    dcc.Graph(id="hodo-traces"),
+    # html.Div([
+    # ]),
 ])
 
 @callback(
@@ -33,18 +33,27 @@ def update_graph(data):
         # ],
         shared_xaxes='all',
         shared_yaxes='all',
+        subplot_titles=sum([[f'X{i}',f'Y{i}'] for i in range(data['n_hodo'])], []),
         # print_grid=True,
-        vertical_spacing=0.075,
-        horizontal_spacing=0.08,
-        # figsize= (1500, 1500)
+        # vertical_spacing=0.075,
+        # horizontal_spacing=0.08,
+        # row_heights=[1500,]*data['n_hodo'],
+        # figsize= (500, 1500)
     )
     for i in range(data['n_hodo']):
         fig.add_trace(go.Scatter(x=data['samples'], y=data['traces'][i+data['hod_x'][0]]), 
+                    #   title=f'X{i}',
                       row=i+1,
                       col=1 )
-        fig.add_trace(go.Scatter(x=data['samples'], y=data['traces'][i+data['hod_y'][0]]), 
+        fig.add_trace(go.Scatter(
+            x=data['samples'], 
+            y=data['traces'][i+data['hod_y'][0]],
+            ), 
+            # label=f'Y{i}',
                 row=i+1,
                 col=2 )
-    # fig.update_layout(autosize=False, height=1200, width=1200)
-
+    # fig.update_layout(autosize=True, height=2200, width=1200)
+    fig.update_layout(autosize=True,
+        height=1600,
+    )
     return fig
