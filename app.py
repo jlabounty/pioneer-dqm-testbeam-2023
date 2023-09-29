@@ -6,6 +6,7 @@ import zmq
 import json
 import dash_daq as daq
 import ast
+import analysis.helpers as helpers
 
 
 app = Dash(__name__, use_pages=True)
@@ -17,6 +18,7 @@ socket.connect("tcp://localhost:5555")
 
 app.layout = html.Div([
     dcc.Store(id='traces'),
+    dcc.Store(id='traces-processed'),
     dcc.Interval(id = 'update-data',
                  interval=10*1000, # in milliseconds
                  n_intervals=0),
@@ -65,7 +67,7 @@ def update_metrics(n, do_update, existing_data):
         dicti = json.loads(message)
         # print('type dicti:', type(dicti))
         # print(dicti[:10])
-        return ast.literal_eval(dicti)
+        return helpers.process_raw(ast.literal_eval(dicti))
     else:
         return existing_data
 
