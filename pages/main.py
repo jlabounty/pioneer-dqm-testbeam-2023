@@ -9,7 +9,7 @@ from dash.exceptions import PreventUpdate
 import dash
 
 # app = Dash(__name__)
-dash.register_page(__name__)
+dash.register_page(__name__, path='/')
 
 layout = html.Div([
     html.H4('Plot an array of traces'),

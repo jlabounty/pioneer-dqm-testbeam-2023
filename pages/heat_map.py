@@ -7,13 +7,15 @@ import numpy as np
 from dash import Dash, html, dcc, Output, Input, State, callback
 from dash.exceptions import PreventUpdate
 import dash
+import dash_bootstrap_components as dbc
+
 
 # app = Dash(__name__)
 dash.register_page(__name__)
 
 layout = html.Div([
     html.H4('Plot the heatmap of the traces'),
-    # html.Button('Reset Heatmaps', id='reset-histograms')
+    # dbc.Button('Reset Heatmaps', id='reset-histograms')
     html.Div([
         dcc.Graph(id="hodo-heatmap" , style={'display': 'inline-block'}),
         dcc.Graph(id="trace-heatmap", style={'display': 'inline-block'}),

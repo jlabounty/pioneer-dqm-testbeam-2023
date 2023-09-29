@@ -7,6 +7,8 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 import dash
 from dash import html
+import dash_bootstrap_components as dbc
+
 
 dash.register_page(__name__)
 
@@ -17,7 +19,7 @@ dash.register_page(__name__)
 
 layout = html.Div(
     [
-        html.Button('Update Constants', id='update-constants-now', n_clicks=0),
+        dbc.Button('Update Constants', id='update-constants-now', n_clicks=0),
         html.Div([
             html.H4(id='constants-dump')
         ]),

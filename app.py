@@ -7,9 +7,14 @@ import json
 import dash_daq as daq
 import ast
 import analysis.helpers as helpers
+import dash_bootstrap_components as dbc
 
 
-app = Dash(__name__, use_pages=True)
+app = Dash(__name__, 
+           use_pages=True,
+           external_stylesheets=[dbc.themes.BOOTSTRAP]
+)
+
 
 print("Connecting to hello world server...")
 context = zmq.Context()
@@ -27,22 +32,43 @@ app.layout = html.Div([
                 n_intervals=0),
     html.H1('Multi-page app with Dash Pages'),
     html.Div([
-        daq.BooleanSwitch(id='do-update', on=True,label='Update Data'),
-        html.Button('Update Now', id='do-update-now'),
-        html.Button('Reset Histograms', id='reset-histograms'),
+        daq.BooleanSwitch(id='do-update', on=True,label='Update Data', style={'display': 'inline-block'}),
+        dbc.Button('Update Now', id='do-update-now', style={'display': 'inline-block'}),
+        dbc.Button('Reset Histograms', id='reset-histograms', style={'display': 'inline-block'}),
         dcc.Slider(
                 id='update-rate',
                 min=1,
                 max=20,
                 step=1,
-                value=5
+                value=5,
+                # style={'display': 'inline-block'}
             ),
     ]),
-    html.Div([
-        html.Div(
-            dcc.Link(f"{page['name']} - {page['path']}", href=page["relative_path"])
-        ) for page in dash.page_registry.values()
-    ]),
+    dbc.Nav(
+            [
+                dbc.NavLink(f"{page['name']}", href=page['relative_path']) for page in  dash.page_registry.values()
+            ],
+            # vertical=True,
+            pills=True,
+        ),
+    # html.Div([
+    #     html.Div(
+    #         dcc.Link(f"{page['name']} - {page['path']}", href=page["relative_path"])
+    #     ) for page in dash.page_registry.values()
+    # ]),
+    # dcc.Dropdown(
+    #     options=[
+    #         {
+    #             "label":dcc.Link(children=page['path'] ,href=page["relative_path"]),
+    #             "value": page['path']
+    #         } 
+    #         dcc.Link('Navigate to "/"', href='/')
+
+    #         for page in dash.page_registry.values()
+    #     ],
+    #     value="main",
+    #     id='page-dropdown'
+    # ),
     # html.Div([
     #     html.H4(id='store-dump')
     # ]),
@@ -52,6 +78,12 @@ app.layout = html.Div([
 @callback(Output('update-data', 'interval'), Input('update-rate', 'value' ))
 def update_refresh_rate(rate):
     return int(rate)*1000
+
+# @callback(
+#     Input('page-dropdown', 'value')
+# )
+# def navigation_dropdown(val):
+#     print(f'You have selected: {val}')
 
 @callback(Output('traces', 'data'),
         Input('update-data', 'n_intervals'), 
