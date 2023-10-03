@@ -4,6 +4,8 @@ import sys
 import numpy as np
 import json
 import ast
+import time
+import pandas
 
 # ----------------------------------------------------------
 # Helper functions for the DQM processing
@@ -15,9 +17,12 @@ def read_from_socket(socket,message='TRACES'):
         Given an existing websocket, read the latest traces
     '''
     # TODO: make this robust against timeout
+    t1 = time.time()
     socket.send_string(str(message))
-    message = socket.recv().decode()
-    return json.loads(ast.literal_eval(message))
+    mout = socket.recv().decode()
+    t2 = time.time()
+    print(f"Message with length {len(mout)} bytes recieved from input '{message}' in:", t2-t1, 'seconds')
+    return json.loads(ast.literal_eval(mout))
         
 
 def process_raw(data):
@@ -48,6 +53,10 @@ def process_raw(data):
     #     output['nai'],
     # )
     return output
+
+def process_trends(data):
+    return data
+    # return pandas.DataFrame(data)
 
 
 def find_pedestal(trace, n=5):

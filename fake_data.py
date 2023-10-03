@@ -7,6 +7,7 @@ import json
 import numpy as np
 import hist
 import analysis.helpers as helpers
+import pandas
 
 context = zmq.Context()
 socket = context.socket(zmq.REP)
@@ -18,10 +19,17 @@ lyso_layout = [3,4,3]
 n_nai = 4
 len_traces = 40
 pedestal = -1700
+n_rows = 25
 
 h1 = np.zeros((n_hodo,n_hodo))
 h2 = np.zeros((10,5))
 
+
+def make_dataframe():
+    df = pandas.DataFrame(columns = ['run', 'subrun', 'event', 't', 'x', 'y'] )
+    return df
+
+df = make_dataframe()
 
 def make_trace(i=len_traces, has_pulse=False, pulse_amplitude=100,noise=10,ped=pedestal):
     trace = np.random.randint(-noise,noise,i, dtype=int) + pedestal
@@ -39,6 +47,11 @@ while True:
             constants = {f'Calibration {i}': np.random.random() for i in range(100) }
             print("Sending constants...")
             socket.send_json(json.dumps(constants))
+        case 'TREND':
+            socket.send_json(df.tail(n_rows).to_json())
+        case 'RESETTREND':
+            df = make_dataframe()
+            socket.send_json(df.to_json())
         case 'TRACES' | 'RESETHIST':
             if 'RESET' in message.decode():
                 h1 = np.zeros((n_hodo,n_hodo))
@@ -107,6 +120,17 @@ while True:
                     'odb_y':y_location, # + np.random.normal(0,2),
                 }
             }
+            df = pandas.concat( [df,
+                pandas.DataFrame([{
+                    'run':dicti['run'],
+                    'subrun':dicti['subrun'],
+                    'event':dicti['event'],
+                    'time':time.time(),
+                    'x':x_location, # + np.random.normal(0,2),
+                    'y':y_location, # + np.random.normal(0,2),
+                }])], 
+                ignore_index=True
+            )
             # print(dicti)
             # print(type(traces[-1][-2]))
             # print(type(dicti), type(json.dumps(dicti)))

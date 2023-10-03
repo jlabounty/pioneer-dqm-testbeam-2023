@@ -24,7 +24,11 @@ socket.connect("tcp://localhost:5555")
 app.layout = html.Div([
     dcc.Store(id='traces'),
     dcc.Store(id='constants'),
+    dcc.Store(id='trends'),
     dcc.Interval(id = 'update-data',
+                 interval=10*1000, # in milliseconds
+                 n_intervals=0),
+    dcc.Interval(id = 'update-trends',
                  interval=10*1000, # in milliseconds
                  n_intervals=0),
     dcc.Interval(id = 'update-constants',
@@ -34,7 +38,14 @@ app.layout = html.Div([
     html.Div([
         daq.BooleanSwitch(id='do-update', on=True,label='Update Data', style={'display': 'inline-block'}),
         dbc.Button('Update Now', id='do-update-now', style={'display': 'inline-block'}),
-        dbc.Button('Reset Histograms', id='reset-histograms', style={'display': 'inline-block'}),
+        dbc.Button('Reset Histograms + Trends', id='reset-histograms', style={'display': 'inline-block'}),
+        dbc.DropdownMenu(
+            [dbc.DropdownMenuItem(
+            f"{page['name']}", href=page['relative_path']
+            ) for page in  dash.page_registry.values()],
+            label='Page Navigation',
+            style={'display': 'inline-block'}
+        ),
         dcc.Slider(
                 id='update-rate',
                 min=1,
@@ -44,13 +55,13 @@ app.layout = html.Div([
                 # style={'display': 'inline-block'}
             ),
     ]),
-    dbc.Nav(
-            [
-                dbc.NavLink(f"{page['name']}", href=page['relative_path']) for page in  dash.page_registry.values()
-            ],
-            # vertical=True,
-            pills=True,
-        ),
+    # dbc.Nav(
+    #         [
+    #             dbc.NavLink(f"{page['name']}", href=page['relative_path']) for page in  dash.page_registry.values()
+    #         ],
+    #         # vertical=True,
+    #         pills=True,
+    #     ),
     # html.Div([
     #     html.Div(
     #         dcc.Link(f"{page['name']} - {page['path']}", href=page["relative_path"])
@@ -96,11 +107,33 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
     # print(type(existing_data))
     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
         # TODO: Make robust against timeout/other error
-        message='TRACES'
         if( ctx.triggered_id == 'reset-histograms' ):
             message = 'RESETHIST'
+        else:
+            message = 'TRACES'
         data = helpers.read_from_socket(socket,message=message)
         return helpers.process_raw(data)
+    else:
+        return existing_data
+    
+@callback(Output('trends', 'data'),
+        Input('update-data', 'n_intervals'), 
+        Input('do-update', 'on'),
+        Input('do-update-now', 'n_clicks'), 
+        Input('reset-histograms', 'n_clicks'), 
+        Input('traces', 'data'),
+)
+def update_trends(n, do_update, do_update_now, reset_histograms, existing_data, socket=socket):
+    # print(type(existing_data))
+    if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
+        # TODO: Make robust against timeout/other error
+        if( ctx.triggered_id == 'reset-histograms' ):
+            message = 'RESETTREND'
+        else:
+            message = 'TREND'
+        data = helpers.read_from_socket(socket,message=message)
+        # print('trend data:', data)
+        return helpers.process_trends(data)
     else:
         return existing_data
 

@@ -1,0 +1,1 @@
+copyToRocks /home/jlab/github/pioneer-dqm-testbeam-2023 /home/labounty/github/
