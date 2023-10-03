@@ -13,23 +13,15 @@
     'range_hodo_y':tuple(int,int), # range of the 'traces' array for the hodoscope Y channels
     'range_lyso':tuple(int,int),   # range of the 'traces' array for the lyso channels
     'range_nai':tuple(int,int),    # range of the 'traces' array for the NaI channels
-    'traces':list[list[int]], # an array of raw traces
+    'traces':list[list[int]], # an array of raw traces, with the indices corresponding to the ranges above
     'histograms':{
         'hodo':array(n_hodo_x, n_hodo_y), # integrated hodoscope energy
-        'xtal':array(xtal_shape), # integrated xtal array energy histogram, shape something like
-                                  # ..AAAAAA.. 
-                                  # D.112233.C
-                                  # D44556677C
-                                  # D.889900.C
-                                  # ..BBBBBB.. 
+        'xtal':array(xtal_shape), # integrated xtal array energy histogram
     }, #event by event histograms
-    'odb':{
-        'odb_x':float, #position of the table in x
-        'odb_y':float, #position of the table in y
-    } # parameters from the odb
 }
 
-# CONST
+# ODB
 {
-    'constants':list[float] # same order as 'traces' array above
+    # get the current ODB parameters, including the calibration constants etc.
+    'constants':list[float] # calibration constants, in the same order as 'traces' array above
 }
