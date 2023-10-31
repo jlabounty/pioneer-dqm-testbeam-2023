@@ -31,15 +31,17 @@ def update_dropdown_choices(data):
     # return f'You have selected {value}'
     print(f'Updating options...')
     options = []
-    print(data.keys())
-    print(data['n_hodo'])
-    for i in range(data['n_hodo']):
-        options.append(f'Hodoscope X {i}')
-        options.append(f'Hodoscope Y {i}')
+    # print(data.keys())
     for i in range(data['n_lyso']):
         options.append(f'LYSO {i}')
+    for i in range(data['n_hodo_x']):
+        options.append(f'Hodoscope X {i}')
+    for i in range(data['n_hodo_y']):
+        options.append(f'Hodoscope Y {i}')
     for i in range(data['n_nai']):
-        options.append(f'LYSO {i}')
+        options.append(f'NaI {i}')
+    for i in range(data['n_t0']):
+        options.append(f'T0 {i}')
     print(f'   -> {options=}')
     return options
 
@@ -54,9 +56,23 @@ def update_graph(options, value, data):
     # return f'You have selected {value}'
     # if value not in options:
     #     return
-    index = list(options).index(value)
-    ys = data['traces'][index]
+    # index = list(options).index(value)
+    index = int(value.split(" ")[-1])
+    if 'Hodoscope X' in value:
+        key = 'traces_hodo_x'
+    elif 'Hodoscope Y' in value:
+        key = 'traces_hodo_y'
+    elif 'LYSO' in value:
+        key = 'traces_lyso'
+    elif 'NaI' in value:
+        key = 'traces_nai'
+    elif 'T0' in value:
+        key = 'traces_t0'
+    else:
+        print("Warning: no trace found for selection", value)
+    ys = data[key][index]
+    samples = list(range(len(ys)))
     fig = px.line(
-        x=data['samples'], y=ys
+        x=samples, y=ys
     )
     return fig

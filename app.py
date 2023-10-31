@@ -4,11 +4,14 @@ from dash import Dash, dcc, html, Input, Output, callback
 import plotly 
 import zmq
 import json
+import jsonpickle
 import dash_daq as daq
 import ast
 import analysis.helpers as helpers
 import dash_bootstrap_components as dbc
-
+import hist
+import os
+import flask
 
 app = Dash(__name__, 
            use_pages=True,
@@ -16,20 +19,38 @@ app = Dash(__name__,
 )
 
 
+# base directories
+ONLINE_DIR = '/home/jlab/testbeam_example_files/online/'
+BASE_DIR = '/home/jlab/testbeam_example_files/nearline/'
+LOG_DIR = '/home/jlab/testbeam_example_files/nearline_logs/'
+
 print("Connecting to hello world server...")
 context = zmq.Context()
-socket = context.socket(zmq.REQ)
-socket.connect("tcp://localhost:5555")
+# port = 5555 # real
+port = 5556 # fake
+
+data_socket = context.socket(zmq.SUB)
+data_socket.connect(f"tcp://localhost:{port}")
+data_socket.setsockopt(zmq.SUBSCRIBE, b"DATA")
+
+odb_socket = context.socket(zmq.SUB)
+odb_socket.connect(f"tcp://localhost:{port}")
+odb_socket.setsockopt(zmq.SUBSCRIBE, b"ODB")
+# odb_socket = None
+print("Sockets:", data_socket, odb_socket)
 
 app.layout = html.Div([
     dcc.Store(id='traces'),
-    dcc.Store(id='constants'),
-    dcc.Store(id='trends'),
+    dcc.Store(id='constants', storage_type='session'),
+    dcc.Store(id='trends', storage_type='session'),
+    dcc.Store(id='histograms', storage_type='session'),
+    dcc.Store(id='run-log', storage_type='session'),
+    dcc.Store(id='nearline-files', storage_type='session'),
     dcc.Interval(id = 'update-data',
-                 interval=10*1000, # in milliseconds
+                 interval=15*1000, # in milliseconds
                  n_intervals=0),
     dcc.Interval(id = 'update-trends',
-                 interval=10*1000, # in milliseconds
+                 interval=15*1000, # in milliseconds
                  n_intervals=0),
     dcc.Interval(id = 'update-constants',
                 interval=100*1000, # in milliseconds
@@ -39,6 +60,7 @@ app.layout = html.Div([
         daq.BooleanSwitch(id='do-update', on=True,label='Update Data', style={'display': 'inline-block'}),
         dbc.Button('Update Now', id='do-update-now', style={'display': 'inline-block'}),
         dbc.Button('Reset Histograms + Trends', id='reset-histograms', style={'display': 'inline-block'}),
+        dbc.Button('Update Constants', id='update-constants-now', n_clicks=0, style={'display': 'inline-block'}),
         dbc.DropdownMenu(
             [dbc.DropdownMenuItem(
             f"{page['name']}", href=page['relative_path']
@@ -51,38 +73,10 @@ app.layout = html.Div([
                 min=1,
                 max=20,
                 step=1,
-                value=5,
+                value=15,
                 # style={'display': 'inline-block'}
             ),
     ]),
-    # dbc.Nav(
-    #         [
-    #             dbc.NavLink(f"{page['name']}", href=page['relative_path']) for page in  dash.page_registry.values()
-    #         ],
-    #         # vertical=True,
-    #         pills=True,
-    #     ),
-    # html.Div([
-    #     html.Div(
-    #         dcc.Link(f"{page['name']} - {page['path']}", href=page["relative_path"])
-    #     ) for page in dash.page_registry.values()
-    # ]),
-    # dcc.Dropdown(
-    #     options=[
-    #         {
-    #             "label":dcc.Link(children=page['path'] ,href=page["relative_path"]),
-    #             "value": page['path']
-    #         } 
-    #         dcc.Link('Navigate to "/"', href='/')
-
-    #         for page in dash.page_registry.values()
-    #     ],
-    #     value="main",
-    #     id='page-dropdown'
-    # ),
-    # html.Div([
-    #     html.H4(id='store-dump')
-    # ]),
     dash.page_container
 ])
 
@@ -90,31 +84,34 @@ app.layout = html.Div([
 def update_refresh_rate(rate):
     return int(rate)*1000
 
-# @callback(
-#     Input('page-dropdown', 'value')
-# )
-# def navigation_dropdown(val):
-#     print(f'You have selected: {val}')
-
 @callback(Output('traces', 'data'),
+        Output('histograms', 'data'),
         Input('update-data', 'n_intervals'), 
         Input('do-update', 'on'),
         Input('do-update-now', 'n_clicks'), 
         Input('reset-histograms', 'n_clicks'), 
         Input('traces', 'data'),
+        Input('histograms', 'data'),
 )
-def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, socket=socket):
+def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, existing_histograms, socket=data_socket):
     # print(type(existing_data))
     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
-        # TODO: Make robust against timeout/other error
-        if( ctx.triggered_id == 'reset-histograms' ):
-            message = 'RESETHIST'
-        else:
-            message = 'TRACES'
-        data = helpers.read_from_socket(socket,message=message)
-        return helpers.process_raw(data)
+        with helpers.time_section(tag='update_traces'):
+            # TODO: Make robust against timeout/other error
+            try:
+                data = helpers.read_from_socket(socket,message='TRACES')
+            except:
+                print("Warning: Unable to get next traces")
+                return existing_data, existing_histograms
+
+            processed = [helpers.process_raw(ast.literal_eval(x)) for x in data]
+            if( ctx.triggered_id == 'reset-histograms' ):
+                return helpers.process_raw(processed[-1]), helpers.create_histograms(processed) # only add the latest traces to the data store
+            else:
+                return helpers.process_raw(processed[-1]), helpers.append_histograms(existing_histograms, processed) # only add the latest traces to the data store
+        
     else:
-        return existing_data
+        return existing_data, helpers.append_histograms(existing_histograms, processed)
     
 @callback(Output('trends', 'data'),
         Input('update-data', 'n_intervals'), 
@@ -123,8 +120,9 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
         Input('reset-histograms', 'n_clicks'), 
         Input('traces', 'data'),
 )
-def update_trends(n, do_update, do_update_now, reset_histograms, existing_data, socket=socket):
+def update_trends(n, do_update, do_update_now, reset_histograms, existing_data, socket=odb_socket):
     # print(type(existing_data))
+    return None
     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
         # TODO: Make robust against timeout/other error
         if( ctx.triggered_id == 'reset-histograms' ):
@@ -140,23 +138,59 @@ def update_trends(n, do_update, do_update_now, reset_histograms, existing_data, 
 @callback(Output('constants', 'data'),
         Input('update-constants', 'n_intervals'), 
         Input('do-update', 'on'),
-        Input('update-constants-now', 'n_clicks'),
         Input('constants', 'data'),
+        Input('update-constants-now', 'n_clicks'),
 )
-def update_constants(n, do_update, existing_data, button_clicks, socket=socket):
+def update_constants(n, do_update, existing_data, button_clicks, socket=odb_socket):
     # print(type(existing_data))
+    # print(existing_data)
     if(do_update or ctx.triggered_id == 'update-constants-now'):
         # TODO: Make robust against timeout/other error
-        data = helpers.read_from_socket(socket, message='CONST')
-        return data
+        # print("*****************************************************************reading constants")
+        try:
+            data = helpers.read_from_socket(socket, message='CONST')
+            # print(data)
+            return data
+        except:
+            print("Warning: unable to read ODB")
+            return existing_data
+    else:
+        return existing_data
+
+@callback(Output('nearline-files', 'data'),
+        Input('update-constants', 'n_intervals'), 
+        Input('do-update', 'on'),
+        Input('update-constants-now', 'n_clicks'),
+        Input('nearline-files', 'data'),
+)
+def update_nearline_file_list(n, do_update, button_clicks, existing_data):
+    # print(type(existing_data))
+    # print(existing_data)
+    if(do_update or ctx.triggered_id == 'update-constants-now'):
+        return helpers.create_updated_subrun_list(existing_data, BASE_DIR, LOG_DIR).to_dict() 
     else:
         return existing_data
 
 
+# Functions to display jsroot files
 
-# @callback(Output('store-dump', 'children'), Input('traces', 'data'))
-# def update_header(data):
-#     return [html.H1('Current store value:' + f'{data}')]
+def make_nearline_file_path(run,subrun):
+    return os.path.join(BASE_DIR, f'nearline_hists_run{int(run):05}_{int(subrun):05}.root')
+
+@app.server.route("/files/<run>/<subrun>")
+def serve_nearline_file(run, subrun):
+    this_file = make_nearline_file_path(run,subrun)
+    print("Looking for file:", this_file)
+    return flask.send_file(os.path.abspath(this_file))
+
+@app.server.route("/jsroot")
+def jsroot():
+    return flask.render_template('jsroot.html')
+
+@app.server.route("/display/<int:run>/<int:subrun>")
+def jsroot_subrun(run,subrun):
+    return flask.redirect(f'/jsroot?file=/files/{run}/{subrun}')
 
 if __name__ == '__main__':
+    print("Starting app...")
     app.run(debug=True)

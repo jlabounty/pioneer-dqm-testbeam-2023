@@ -38,16 +38,16 @@ def update_hodo_bar(data):
 
     fig.add_trace(
         go.Bar({
-            'x':list(range(data['n_hodo'])),
-            'y':data['integrals'][data['hod_x'][0]:data['hod_x'][1]]
+            'x':list(range(data['n_hodo_x'])),
+            'y':data['integrals_hodo_x']
         }),
         row = 1, col=1
     )
 
     fig.add_trace(
         go.Bar({
-            'x':list(range(data['n_hodo'])),
-            'y':data['integrals'][data['hod_y'][0]:data['hod_y'][1]],
+            'x':list(range(data['n_hodo_y'])),
+            'y':data['integrals_hodo_y']
             },
             # orientation='h'
         ),
@@ -61,14 +61,15 @@ def update_hodo_bar(data):
     Input('traces', 'data')
 )
 def update_t0_trace(data):
-    return px.line(
-        x=data['samples'],
-        y=data['t0_trace'],
-        title='T0 Profile',
-        # ylabel='ADC Counts',
-        # xlabel='Sample Number'
-        labels={
-            'x':'Sample Number',
-            'y':'ADC Counts'
-        }
-    )
+    fig = plotly.subplots.make_subplots()
+    for i,t0_trace in enumerate(data['traces_t0']):
+        samples = list(range(len(t0_trace)))
+        fig.add_trace(
+            go.Scatter(
+                x=samples,
+                y=t0_trace,
+                # label=f'T0 {i}'
+                # orientation='h'
+            ),
+        )
+    return fig

@@ -60,7 +60,8 @@ def update_graph(data):
     }
 
     for i in range(10):
-        fig.add_trace(go.Scatter(x=data['samples'], y=data['traces'][data['lyso'][0]+i]), row=this_map[i][0],col=this_map[i][1] )
+        samples = list(range(len(data['traces_lyso'][i])))
+        fig.add_trace(go.Scatter(x=samples, y=data['traces_lyso'][i]), row=this_map[i][0],col=this_map[i][1] )
     return fig
 
 
@@ -91,38 +92,39 @@ def update_hodo(data):
 
     fig.add_trace(
         go.Bar({
-            'x':list(range(data['n_hodo'])),
-            'y':data['integrals'][data['hod_x'][0]:data['hod_x'][1]]
+            'x':list(range(data['n_hodo_x'])),
+            'y':data['integrals_hodo_x']
         }),
         row = 1, col=2
     )
 
     fig.add_trace(
         go.Bar({
-            'y':list(range(data['n_hodo']))[::-1],
-            'x':data['integrals'][data['hod_y'][0]:data['hod_y'][1]],
+            'y':list(range(data['n_hodo_y']))[::-1],
+            'x':data['integrals_hodo_y'],
             },
             orientation='h'
         ),
         row = 2, col=1
     )
 
-    arri = np.zeros((data['n_hodo'], data['n_hodo']), dtype=int)
-    for i in range(data['n_hodo']):
-        arri[:,i] += data['integrals'][data['hod_x'][0]+i]
-        arri[i,:] += data['integrals'][data['hod_y'][0]+i]
+    arri = np.zeros((data['n_hodo_x'], data['n_hodo_y']), dtype=int)
+    for i in range(data['n_hodo_x']):
+        arri[:,i] += data['integrals_hodo_x']
+    for i in range(data['n_hodo_y']):
+        arri[i,:] += data['integrals_hodo_y']
     fig.add_trace(
         px.imshow(arri[::-1,:]).data[0],
         row = 2, col=2
     )
 
-    fig.add_trace(
-        go.Scatter(
-            x=[data['odb']['odb_x']],
-            y=[data['odb']['odb_y']],
-        ),
-        row=2, col=2
-    )
+    # fig.add_trace(
+    #     go.Scatter(
+    #         x=[data['odb']['odb_x']],
+    #         y=[data['odb']['odb_y']],
+    #     ),
+    #     row=2, col=2
+    # )
 
 
 
