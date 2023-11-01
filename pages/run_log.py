@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, ctx
 import plotly.express as px
 import plotly.subplots
 import plotly.graph_objects as go
@@ -12,22 +12,25 @@ import json
 import jsonpickle 
 import hist
 import analysis.helpers as helpers
+import os
 
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 # app = Dash(__name__)
 dash.register_page(__name__)
 from dash import Dash, Input, Output, callback, dash_table
-import pandas as pd
+import pandas
 import dash_bootstrap_components as dbc
 
 layout = html.Div([
     html.H4('Run Log:'),
-    # dcc.Graph(id="hist-example-graph"),
     dbc.Container([
-        dbc.Label('Click a cell in the table:'),
-        # dash_table.DataTable(df.to_dict('records'),[{"name": i, "id": i} for i in df.columns], id='tbl'),
+        html.Button("Download Runlog", id="btn_csv"),
+        dcc.Download(id="download-runlog-csv"),
+        # dbc.Label('Click a cell in the table:'),
+        # dash_table.DataTable(df.to_dict('records'),[{"name": i, "id": i} for i in df.columns], id='runlog-table'),
         dash_table.DataTable(
-            id='tbl',
+            id='runlog-table',
             filter_action="native",
             sort_action="native",
             sort_mode="multi",
@@ -38,50 +41,60 @@ layout = html.Div([
             page_action="native",
             page_current= 0,
             page_size= 10,
+            # fixed_columns={'headers': True, 'data': 1},
+            style_table={'overflowX': 'auto'},
             style_data={
-                'whiteSpace': 'normal',
-                'height': 'auto',
-                'overflowX': 'auto'
+                # 'whiteSpace': 'normal',
+                # 'height': 'auto',
+                # 'overflowX': 'scroll',
+                # 'minWidth': '100%',
+                # 'maxWidth': '400px'
+                'minWidth': '20px', 'width': '180px', 'maxWidth': '380px',
+                'overflow': 'hidden',
+                'textOverflow': 'ellipsis',
             },
         ),
         # dbc.Alert(id='nearline_file_list'),
         html.Div(id='nearline_file_list'),
-        dbc.Alert(id='tbl_out'),
-    ])
+        dbc.Alert(id='runlog_table_out'),
+        ],
+        # style={'overflowX': 'scroll'}
+    )
 ])
 
 @callback(
-    Output("tbl", 'data'),
-    Output("tbl", 'columns'),
-    Output("run-log", 'data'),
+    Output("runlog-table", 'data'),
+    Output("runlog-table", 'columns'),
+    # Output("run-log", 'data'),
     Input('update-constants', 'n_intervals'), 
     Input('do-update', 'on'),
     Input('update-constants-now', 'n_clicks'),
-    Input("tbl", 'data'),
-    Input("tbl", 'columns'),
+    Input("runlog-table", 'data'),
+    Input("runlog-table", 'columns'),
     Input("run-log", 'data'),
 )
-def fill_columns(update_constants, do_update, update_constants_now, existing_data, existing_columns, run_log_store):
-    with helpers.time_section("fill-datatable"):
-        if(existing_data is not None):
-            dfi = pd.DataFrame(existing_data)
-            df = helpers.create_updated_runlog(dfi)
-        elif run_log_store is not None:
-            dfi = pd.DataFrame(run_log_store)
-            df = helpers.create_updated_runlog(dfi)
-        else:
-            df = helpers.create_updated_runlog()
-        df['id'] = df.index
-        if(do_update or ctx.triggered_id == 'update-constants-now'):
-            return (df.to_dict('records'), 
-                [{"name": i, "id": i, "hideable": True, 'selectable':True} for i in df.columns if i != 'id'],
-                df.to_dict('records'))
-        else:
-            return existing_data, existing_columns, existing_data
+def fill_columns(update_constants, do_update, update_constants_now, existing_data, existing_columns, run_log_data):
+    # with helpers.time_section("fill-datatable"):
+    print(f'{existing_data=}')
+    if(run_log_data is not None):
+        df = pandas.DataFrame(run_log_data)
+    elif(existing_data is not None):
+        df = pandas.DataFrame(existing_data)
+    else:
+        print("Please wait for database call...")
+        return existing_data, existing_columns
+    df['id'] = df.index.astype(int)
+    if(do_update or ctx.triggered_id == 'update-constants-now'):
+        return (df.to_dict('records'), 
+            [{"name": i, "id": i, "hideable": True, 'selectable':True} for i in df.columns if i != 'id'],
+            # df.to_dict('records'))
+        )
+    else:
+        return existing_data, existing_columns
 
 @callback(
-    Output('tbl_out', 'children'), 
-    Input('tbl', 'active_cell')
+    Output('runlog_table_out', 'children'), 
+    Input('runlog-table', 'active_cell')
 )
 def update_graphs(active_cell):
     print(f'{active_cell=}')
@@ -90,8 +103,8 @@ def update_graphs(active_cell):
 
 @callback(
     Output('nearline_file_list', 'children'), 
-    Input('tbl', 'derived_virtual_selected_rows'),
-    Input('tbl', 'active_cell'),
+    Input('runlog-table', 'derived_virtual_selected_rows'),
+    Input('runlog-table', 'active_cell'),
     Input("run-log", 'data'),
     Input("nearline-files", 'data'),
 )
@@ -101,13 +114,13 @@ def show_nearline_files_selected_rows(selected_rows, selected_cells, run_log_dat
     active_row_id = selected_cells['row_id'] if selected_cells else None
     if(active_row_id is not None):
         selected_rows += [active_row_id,]
-    print(f'{selected_rows=}')
-    print(f'{selected_cells=}')
-    df = pd.DataFrame(run_log_data)
-    nl = pd.DataFrame(nearline_file_data)
-    nl.sort_values(by=['Run', 'Subrun'], inplace=True)
-    print(f'{nearline_file_data=}')
-    print(f'{nl=}')
+    # print(f'{selected_rows=}')
+    # print(f'{selected_cells=}')
+    df = pandas.DataFrame(run_log_data)
+    nl = pandas.DataFrame(nearline_file_data)
+    # nl.sort_values(by=['run_number', 'subrun_number'], inplace=True)
+    # print(f'{nearline_file_data=}')
+    print(f'{nl.head()=}')
     found = 0
     if(len(selected_rows) > 0):
         output = [
@@ -115,24 +128,46 @@ def show_nearline_files_selected_rows(selected_rows, selected_cells, run_log_dat
         ]
         for x in selected_rows:
             row = df.iloc[x]
-            print(f'Found row: {row}')
-            nli = nl.loc[nl['Run'] == row['Run']]#.loc[nl['Subrun'] == row['Subrun']]
+            print(f'Found row: {row["run_number"]}')
+            print(row)
+            nli = nl.loc[nl['run_number'] == row['run_number']]#.loc[nl['Subrun'] == row['Subrun']]
+            
             if nli.shape[0] > 0:
                 found += 1
                 for _,nlii in nli.iterrows():
                     # output.append(html.P([html.A(f'{nlii}\n', href=f'/display/{nlii["Run"]}/{nlii["Subrun"]}', target="_blank")]))
-                    output.append(
-                        html.P(
-                            [
-                                f'Run {nlii["Run"]} subrun {nlii["Subrun"]} -> ',
-                                html.A('Display', href=f'/display/{nlii["Run"]}/{nlii["Subrun"]}', target="_blank"),
-                                ' | ',
-                                html.A(f'Download', href=f'/files/{nlii["Run"]}/{nlii["Subrun"]}'),
-                            ])
+                    ding = [
+                        f'Run {nlii["run_number"]} subrun {nlii["subrun_number"]} -> ',
+                    ]
+                    if os.path.exists(helpers.make_nearline_file_path(nlii["run_number"], nlii["subrun_number"])):
+                        ding += [
+                                    html.A('Display', href=f'/display/{nlii["run_number"]}/{nlii["subrun_number"]}', target="_blank"),
+                                    ' | ',
+                                    html.A(f'Download', href=f'/files/{nlii["run_number"]}/{nlii["subrun_number"]}'),
+                                    ' | ',
+                                    # html.A(f'Log File', href=f'/logs/{nlii["run_number"]}/{nlii["subrun_number"]}'),
+                                ]
+                    ding.append(
+                                html.A(f'Log File', href=f'/logs/{nlii["run_number"]}/{nlii["subrun_number"]}')
                     )
+                    print(ding)
+                    output.append(html.P(ding))
         # return this_string
     if found > 0:
         return output
     else:
         output = [html.H4("No available nearline files from this selection..."),]
     return output
+
+@callback(
+    Output("download-runlog-csv", "data"),
+    Input("btn_csv", "n_clicks"),
+    Input("runlog-table", 'data'),
+    prevent_initial_call=True,
+)
+def download_runlog(n_clicks,data):
+    if(ctx.triggered_id in ['btn_csv']):
+        # print('downloading!!')
+        # print("   -> passed")
+        df = pandas.DataFrame(data)
+        return dcc.send_data_frame(df.to_csv, "runlog.csv")

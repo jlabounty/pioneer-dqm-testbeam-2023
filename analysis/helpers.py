@@ -8,6 +8,13 @@ import ast
 import time
 import pandas
 import hist
+import psycopg2
+import pandas
+
+# base directories
+ONLINE_DIR = '/home/jlab/testbeam_example_files/online/'
+BASE_DIR = '/home/jlab/testbeam_example_files/nearline/'
+LOG_DIR = '/home/jlab/testbeam_example_files/nearline_logs/'
 
 # ----------------------------------------------------------
 # Helper functions for the DQM processing
@@ -19,27 +26,18 @@ def read_from_socket(socket,message='TRACES'):
         Given an existing websocket, read the latest traces
     '''
     # TODO: make this robust against timeout
-    print("reading")
-    with time_section(f" read_from_socket | {message} "):
-        # #TODO: clean this up now that we're in PUB/SUB mode
-        topic, mout = socket.recv_multipart()
-        mout = mout.decode()
-        # print(topic, mout[:10])
-        lenmsg = len(mout)
-        try:
-            mout = ast.literal_eval(mout)
-        except:
-            print(f"Warning: error doing 'literal_eval' of {topic} -> '{mout[:10]}...'")
-            # print(e)
-        # print(len(mout))
-        if(len(mout) > 0):
-            with open(f"{message}.out",'a') as fout:
-                fout.write(str(mout)+"\n")
-                # raise ValueError
-        # for x in mout:
-        #     print(x[0])
-        # return json.loads(mout)
-    # print(mout)
+    # #TODO: clean this up now that we're in PUB/SUB mode
+    # with time_section(f" read_from_socket | {message} "):
+    topic, mout = socket.recv_multipart()
+    mout = mout.decode()
+    lenmsg = len(mout)
+    try:
+        mout = ast.literal_eval(mout)
+    except:
+        print(f"Warning: error doing 'literal_eval' of {topic} -> '{mout[:10]}...'")
+    # if(len(mout) > 0):
+    #     with open(f"{message}.out",'a') as fout:
+    #         fout.write(str(mout)+"\n")
     return mout
         
 
@@ -98,15 +96,15 @@ def append_histograms(existing_histograms, processed):
     # fill existing histograms
     if existing_histograms is None:
         existing_histograms = create_histograms(processed)
-    with time_section("append_histograms"):
-        hists = jsonpickle.decode(existing_histograms)
-        print(f"Appending {len(processed)} items to existing histograms")
-        for data in processed:
-            for x, traces in data.items():
-                if('trace' in x):
-                    for j,trace in enumerate(traces):
-                        hists[x]['integrals'][j].fill(data[x.replace("traces_",'integrals_')][j])
-        return jsonpickle.encode(hists)
+    # with time_section("append_histograms"):
+    hists = jsonpickle.decode(existing_histograms)
+    # print(f"Appending {len(processed)} items to existing histograms")
+    for data in processed:
+        for x, traces in data.items():
+            if('trace' in x):
+                for j,trace in enumerate(traces):
+                    hists[x]['integrals'][j].fill(data[x.replace("traces_",'integrals_')][j])
+    return jsonpickle.encode(hists)
 
 
 
@@ -148,54 +146,35 @@ def process_odb_json_for_runlog(fi):
 
 def create_updated_runlog(
     df=None, 
-    midas_indir='/home/jlab/testbeam_example_files/online'
+    db_connection=None,
 ):
-    '''reads in the .json files produced by midas and udpates the run log'''
-    files = [os.path.join(midas_indir, x) for x in os.listdir(midas_indir) if '.json' in x[-7:] and 'last' not in x]
-    if(df is None):
-        df = pandas.DataFrame(columns=['Run', 'Type', 'Comment', 'Shifters', 'Start Time', 'Stop Time', 'NSubruns'])
-    for i, fi in enumerate(files):
-        run = int(fi.split("run")[1].split(".json")[0])
-        if(run in df['Run'].unique()):
-            # print("   -> Run found")
-            continue
-        else:
-            print(i, fi)    
-            print("   -> Run not found in log, processing!")
-            processed_odb = process_odb_json_for_runlog(fi)
-            df.loc[-1] = processed_odb
-            df.index = df.index + 1
+    '''reads in the online database filled by midas and udpates the internal nearline run log'''
+    # TODO: change to db access
+    if db_connection is None:
+        raise NotImplementedError
+    df = pandas.read_sql('select * from online order by run_number desc;', con=db_connection)
+    # df.to_csv("runlog.csv")
+    # print(df.head())
+    # print(df.index)
+    # print(df.head())
 
-            print(processed_odb)
-            # break
-    df.sort_values(by='Run', ascending=False, inplace=True)
     return df
 
 def create_updated_subrun_list(
-    df=None,
-    file_indir='/home/jlab/testbeam_example_files/nearline',
-    log_indir='/home/jlab/testbeam_example_files/nearline_logs',
+    db_connection=None,
 ):
     '''looks for files in the specified directories and creates a list of files for jsroot to open
         assume the file looks like: /path/to/nearline_hists_run00338_00005.root
     '''
-    if(df is None):
-        columns = ['Run', 'Subrun', 'path']
-        df = pandas.DataFrame(columns=columns)
-    else:
-        df = pandas.DataFrame(df)
-    files = [os.path.join(file_indir,x) for x in os.listdir(file_indir) if '.root' in x[-5:]]
-    # print()
-    processed_files = df['path'].unique()
-    for i, fi in enumerate(files):
-        if(fi in processed_files):
-            continue 
-        # print(f'processing {fi}')
-        run = int(fi.split('_run')[-1].split('_')[0])
-        subrun = int(fi.split('_')[-1].split('.root')[0])
-        df.loc[-1] = {'Run':run, 'Subrun':subrun, 'path':fi}
-        df.index = df.index + 1
-        # print(df.loc[0])
-    # print(f'{df.shape=}')
-    df.sort_values(by=['Run', 'Subrun'], inplace=True)
+    # TODO: change to db access
+    if db_connection is None:
+        raise NotImplementedError
+    df = pandas.read_sql('select * from nearline_processing order by (run_number, subrun_number) desc;', con=db_connection)
     return df
+
+
+def make_nearline_file_path(run,subrun):
+    return os.path.join(BASE_DIR, f'nearline_hists_run{int(run):05}_{int(subrun):05}.root')
+
+def make_nearline_log_file_path(run,subrun):
+    return os.path.join(LOG_DIR, f'nearline_run{int(run):05}_{int(subrun):05}.log')
