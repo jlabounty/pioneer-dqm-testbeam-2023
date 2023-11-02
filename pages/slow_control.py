@@ -59,8 +59,24 @@ layout = html.Div([
 
         ]
     ),
-    dcc.Dropdown(options=[], id='slow-control-ids', multi=True),
-    dcc.Dropdown(options=[], id='slow-control-categories', multi=True),
+    dbc.Row([
+        dbc.Col([
+            dcc.Dropdown(options=[], id='slow-control-ids', multi=True),
+        ]),
+        dbc.Col([
+            dcc.Dropdown(options=[], id='slow-control-categories', multi=True),
+        ]),
+    ]),
+    dbc.Toast(
+        "",
+        id="slow-control-bad-selection-toast",
+        header="Warning: invalid selection",
+        is_open=False,
+        dismissable=True,
+        icon="danger",
+        # top: 66 positions the toast below the navbar
+        # style={"position": "fixed", "top": 66, "right": 10, "width": 350},
+    ),
     dcc.Graph(id="slow-control-plot"),
     dbc.Container([
         dash_table.DataTable(
@@ -111,6 +127,17 @@ def update_slow_control_ids_categories(data):
     return ids,cats
 
 @callback(
+    Output("slow-control-bad-selection-toast", "is_open"),
+    Output("slow-control-bad-selection-toast", "children"),
+    Input('slow-control-ids', 'value'),
+    Input('slow-control-categories', 'value'),
+)
+def open_toast(ids, cats):
+    if len(cats) > 2:
+        return True, 'Please select 1-2 options only.'
+    return False, ''
+
+@callback(
     Output("slow-control-plot", "figure"), 
     Output("slow-control-table", "data"), 
     Output("slow-control-table", "columns"), 
@@ -124,15 +151,8 @@ def update_slow_control_ids_categories(data):
 )
 def update_graph(ids, cats, start_date, end_date, start_time, end_time, data):
 
-    # print(f'{ids=}')
-    # print(f'{cats=}')
-    # print(f'{start_date=}')
-    # print(f'{end_date=}')
-    # print(f'{start_time=}')
-    # print(f'{end_time=}')
     t0 = pandas.to_datetime(start_date) + pandas.Timedelta(minutes=start_time*3600/2400.)
     t1 = pandas.to_datetime(end_date) + pandas.Timedelta(minutes=end_time*3600/2400.,days=-1)
-    # print(t0,t1)
     fig = plotly.subplots.make_subplots(
         specs=[[{"secondary_y": True}]]
         # secondary_y=True
@@ -161,16 +181,16 @@ def update_graph(ids, cats, start_date, end_date, start_time, end_time, data):
                 ),
                 secondary_y=is_secondary,
             )
-            print(dfi.index)
-            print(df.index)
-            this_index = dfi.index[0]
-            print(this_index)
-            print(dfi.loc[this_index])
-            print(df.loc[this_index])
+            # print(dfi.index)
+            # print(df.index)
+            # this_index = dfi.index[0]
+            # print(this_index)
+            # print(dfi.loc[this_index])
+            # print(df.loc[this_index])
             indices += list(dfi.index)
     # print(indices)
-    print(df.shape)
-    print(df.loc[indices].shape)
+    # print(df.shape)
+    # print(df.loc[indices].shape)
 
 
     return fig, df.loc[indices].to_dict("records"), [{"name": i, "id": i, "hideable": True, 'selectable':True} for i in df.columns if i != 'id'],
