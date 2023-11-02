@@ -59,6 +59,7 @@ app.layout = html.Div([
     dcc.Store(id='histograms'), #, storage_type='session'),
     dcc.Store(id='run-log'), #, storage_type='session'),
     dcc.Store(id='nearline-files'), #, storage_type='session'),
+    dcc.Store(id='slow-control'), #, storage_type='session'),
     dcc.Interval(id = 'update-data',
                  interval=15*1000, # in milliseconds
                  n_intervals=0),
@@ -223,6 +224,21 @@ def update_run_log(n, do_update, button_clicks, existing_data):
     # print(type(existing_data))
     if(do_update or ctx.triggered_id == 'update-constants-now'):
         ding = helpers.create_updated_runlog(None, conn).to_dict() 
+        # print(ding)
+        return ding
+    else:
+        return existing_data
+
+@callback(Output('slow-control', 'data'),
+        Input('update-constants', 'n_intervals'), 
+        Input('do-update', 'on'),
+        Input('update-constants-now', 'n_clicks'),
+        Input('slow-control', 'data'),
+)
+def update_slow_control_data(n, do_update, button_clicks, existing_data):
+    # print(type(existing_data))
+    if(do_update or ctx.triggered_id == 'update-constants-now'):
+        ding = helpers.create_updated_slow_control(conn).to_dict() 
         # print(ding)
         return ding
     else:

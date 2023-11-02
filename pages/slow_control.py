@@ -1,0 +1,133 @@
+from dash import Dash, dcc, html, Input, Output
+import plotly.express as px
+import numpy as np
+from dash import Dash, html, dcc, Output, Input, State, callback
+from dash.exceptions import PreventUpdate
+import dash
+from datetime import date
+import pandas
+import dash_bootstrap_components as dbc
+
+import dash_daq as daq
+import plotly
+import plotly.graph_objects as go
+
+
+
+# app = Dash(__name__)
+dash.register_page(__name__)
+
+layout = html.Div([
+    html.H4('Plot the slow control information'),
+    html.Div(id='dd-output-container'),
+    html.Div(
+        [
+            dbc.Row(
+                [
+                    dbc.Col([
+                        dcc.DatePickerRange(
+                            month_format='D-M-Y',
+                            end_date_placeholder_text='D-M-Y',
+                            start_date=date(2023,10,1),
+                            end_date=date(2023,12,1),
+                            id='slow-control-date-range'
+                        ),
+                    ]),
+                    dbc.Col([
+                        daq.Slider(
+                            min=0,
+                            max=2400,
+                            value=0,
+                            handleLabel={"showCurrentValue": True,"label": "Start Time"},
+                            step=30,
+                            id='slow-control-min-time',
+                        ),
+                    ]),
+                    dbc.Col([
+                        daq.Slider(
+                            min=0,
+                            max=2400,
+                            value=2400,
+                            handleLabel={"showCurrentValue": True,"label": "Stop Time"},
+                            step=30,
+                            id='slow-control-max-time',
+                        ),
+                    ]),
+                ],
+                # style={'display': 'inline-block'}
+            ),
+
+        ]
+    ),
+    dcc.Dropdown(options=[], id='slow-control-ids', multi=True),
+    dcc.Dropdown(options=[], id='slow-control-categories', multi=True),
+    dcc.Graph(id="slow-control-plot"),
+])
+
+@callback(
+    Output('slow-control-ids', 'options'),
+    Output('slow-control-categories', 'options'),
+    Input( 'slow-control', 'data')
+)
+def update_slow_control_ids_categories(data):
+    # return f'You have selected {value}'
+    # print('slow control data:', data)
+    if(data is None):
+        return [],[]
+    df = pandas.DataFrame(data)
+    # print(df.head())
+    cats = list(df['reading_type'].unique())
+    ids  = list(df['channel_id'].unique()  )
+
+    return ids,cats
+
+@callback(
+    Output("slow-control-plot", "figure"), 
+    Input('slow-control-ids', 'value'),
+    Input('slow-control-categories', 'value'),
+    Input('slow-control-date-range', 'start_date'),
+    Input('slow-control-date-range', 'end_date'),
+    Input('slow-control-min-time', 'value'),
+    Input('slow-control-max-time', 'value'),
+    Input('slow-control', 'data')
+)
+def update_graph(ids, cats, start_date, end_date, start_time, end_time, data):
+
+    # print(f'{ids=}')
+    # print(f'{cats=}')
+    # print(f'{start_date=}')
+    # print(f'{end_date=}')
+    # print(f'{start_time=}')
+    # print(f'{end_time=}')
+    t0 = pandas.to_datetime(start_date) + pandas.Timedelta(minutes=start_time*3600/2400.)
+    t1 = pandas.to_datetime(end_date) + pandas.Timedelta(minutes=end_time*3600/2400.,days=-1)
+    # print(t0,t1)
+    fig = plotly.subplots.make_subplots(
+        specs=[[{"secondary_y": True}]]
+        # secondary_y=True
+    )
+    if ids is None or cats is None or len(ids) < 1 or len(cats) < 1:
+        return fig
+
+    df = pandas.DataFrame(data)
+    df['time'] = pandas.to_datetime(df['time'])
+    df = df.loc[df['time'] >= t0].loc[df['time'] <= t1]
+    df.sort_values(by='time', inplace=True)
+    # print(df.shape)
+
+    for i, cati in enumerate(cats):
+        is_secondary = (i % 2 != 0)
+        # print(i, cati, is_secondary)
+        for j, idj in enumerate(ids):
+            dfi = df.loc[df['channel_id'] == idj].loc[df['reading_type'] == cati]
+            # print(dfi.head())
+            fig.add_trace(
+                go.Scatter(
+                    x=dfi['time'], 
+                    y=dfi['reading'],
+                    name=f'{idj} | {cati}'
+                ),
+                secondary_y=is_secondary,
+            )
+
+    return fig

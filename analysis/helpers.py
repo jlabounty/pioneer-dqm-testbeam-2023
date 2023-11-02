@@ -173,6 +173,21 @@ def create_updated_subrun_list(
     return df
 
 
+def create_updated_slow_control(
+    db_connection=None,
+    limit = 100_000
+):
+    '''looks for files in the specified directories and creates a list of files for jsroot to open
+        assume the file looks like: /path/to/nearline_hists_run00338_00005.root
+    '''
+    # TODO: change to db access, make this work better, set up queue
+    if db_connection is None:
+        raise NotImplementedError
+    with time_section("fetch slow control"):
+        df = pandas.read_sql(f'select * from slow_control order by random() limit {limit};', con=db_connection)
+        df.sort_values(by='time', inplace=True)
+    return df
+
 def make_nearline_file_path(run,subrun):
     return os.path.join(BASE_DIR, f'nearline_hists_run{int(run):05}_{int(subrun):05}.root')
 
