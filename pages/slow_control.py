@@ -1,7 +1,7 @@
 from dash import Dash, dcc, html, Input, Output
 import plotly.express as px
 import numpy as np
-from dash import Dash, html, dcc, Output, Input, State, callback
+from dash import Dash, html, dcc, Output, Input, State, callback, dash_table, ctx
 from dash.exceptions import PreventUpdate
 import dash
 from datetime import date
@@ -62,6 +62,35 @@ layout = html.Div([
     dcc.Dropdown(options=[], id='slow-control-ids', multi=True),
     dcc.Dropdown(options=[], id='slow-control-categories', multi=True),
     dcc.Graph(id="slow-control-plot"),
+    dbc.Container([
+        dash_table.DataTable(
+            id='slow-control-table',
+            filter_action="native",
+            sort_action="native",
+            sort_mode="multi",
+            column_selectable="single",
+            row_selectable="multi",
+            selected_columns=[],
+            selected_rows=[],
+            page_action="native",
+            page_current= 0,
+            page_size= 10,
+            # fixed_columns={'headers': True, 'data': 1},
+            style_table={'overflowX': 'auto'},
+            style_data={
+                # 'whiteSpace': 'normal',
+                # 'height': 'auto',
+                # 'overflowX': 'scroll',
+                # 'minWidth': '100%',
+                # 'maxWidth': '400px'
+                'minWidth': '20px', 'width': '180px', 'maxWidth': '380px',
+                'overflow': 'hidden',
+                'textOverflow': 'ellipsis',
+            },
+        ),
+    ]),
+    html.Button("Download Slow Control Selection", id="slow-control-download-button"),
+    dcc.Download(id="download-slow-control-csv"),
 ])
 
 @callback(
@@ -83,6 +112,8 @@ def update_slow_control_ids_categories(data):
 
 @callback(
     Output("slow-control-plot", "figure"), 
+    Output("slow-control-table", "data"), 
+    Output("slow-control-table", "columns"), 
     Input('slow-control-ids', 'value'),
     Input('slow-control-categories', 'value'),
     Input('slow-control-date-range', 'start_date'),
@@ -107,7 +138,7 @@ def update_graph(ids, cats, start_date, end_date, start_time, end_time, data):
         # secondary_y=True
     )
     if ids is None or cats is None or len(ids) < 1 or len(cats) < 1:
-        return fig
+        return fig, None, None
 
     df = pandas.DataFrame(data)
     df['time'] = pandas.to_datetime(df['time'])
@@ -115,6 +146,7 @@ def update_graph(ids, cats, start_date, end_date, start_time, end_time, data):
     df.sort_values(by='time', inplace=True)
     # print(df.shape)
 
+    indices = []
     for i, cati in enumerate(cats):
         is_secondary = (i % 2 != 0)
         # print(i, cati, is_secondary)
@@ -129,5 +161,28 @@ def update_graph(ids, cats, start_date, end_date, start_time, end_time, data):
                 ),
                 secondary_y=is_secondary,
             )
+            print(dfi.index)
+            print(df.index)
+            this_index = dfi.index[0]
+            print(this_index)
+            print(dfi.loc[this_index])
+            print(df.loc[this_index])
+            indices += list(dfi.index)
+    # print(indices)
+    print(df.shape)
+    print(df.loc[indices].shape)
 
-    return fig
+
+    return fig, df.loc[indices].to_dict("records"), [{"name": i, "id": i, "hideable": True, 'selectable':True} for i in df.columns if i != 'id'],
+
+
+@callback(
+    Output("download-slow-control-csv", "data"),
+    Input("slow-control-download-button", "n_clicks"),
+    Input("slow-control-table", 'data'),
+    prevent_initial_call=True,
+)
+def download_runlog(n_clicks,data):
+    if(ctx.triggered_id in ['slow-control-download-button']):
+        df = pandas.DataFrame(data)
+        return dcc.send_data_frame(df.to_csv, "slowcontrol.csv")

@@ -93,7 +93,7 @@ app.layout = html.Div([
     # ]),
     dbc.NavbarSimple(
         brand="PIONEER DQM",
-        brand_href="#",
+        brand_href="/",
         color="primary",
         dark=True,
         children = [
