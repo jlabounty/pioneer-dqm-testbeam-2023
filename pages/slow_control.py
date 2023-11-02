@@ -18,10 +18,9 @@ import plotly.graph_objects as go
 dash.register_page(__name__)
 
 layout = html.Div([
-    html.H4('Plot the slow control information'),
-    html.Div(id='dd-output-container'),
     html.Div(
         [
+            dbc.Row([html.H4('Plot the slow control information')]),
             dbc.Row(
                 [
                     dbc.Col([
@@ -61,10 +60,10 @@ layout = html.Div([
     ),
     dbc.Row([
         dbc.Col([
-            dcc.Dropdown(options=[], id='slow-control-ids', multi=True),
+            dcc.Dropdown(placeholder='Select 1+ channel(s)',options=[], id='slow-control-ids', multi=True),
         ]),
         dbc.Col([
-            dcc.Dropdown(options=[], id='slow-control-categories', multi=True),
+            dcc.Dropdown(placeholder='Select 1-2 reading type(s)',options=[], id='slow-control-categories', multi=True),
         ]),
     ]),
     dbc.Toast(
@@ -133,6 +132,8 @@ def update_slow_control_ids_categories(data):
     Input('slow-control-categories', 'value'),
 )
 def open_toast(ids, cats):
+    if(cats is None):
+        return False, ''
     if len(cats) > 2:
         return True, 'Please select 1-2 options only.'
     return False, ''
@@ -157,8 +158,6 @@ def update_graph(ids, cats, start_date, end_date, start_time, end_time, data):
         specs=[[{"secondary_y": True}]]
         # secondary_y=True
     )
-    if ids is None or cats is None or len(ids) < 1 or len(cats) < 1:
-        return fig, None, None
 
     df = pandas.DataFrame(data)
     df['time'] = pandas.to_datetime(df['time'])
@@ -167,31 +166,33 @@ def update_graph(ids, cats, start_date, end_date, start_time, end_time, data):
     # print(df.shape)
 
     indices = []
-    for i, cati in enumerate(cats):
-        is_secondary = (i % 2 != 0)
-        # print(i, cati, is_secondary)
-        for j, idj in enumerate(ids):
-            dfi = df.loc[df['channel_id'] == idj].loc[df['reading_type'] == cati]
-            # print(dfi.head())
-            fig.add_trace(
-                go.Scatter(
-                    x=dfi['time'], 
-                    y=dfi['reading'],
-                    name=f'{idj} | {cati}'
-                ),
-                secondary_y=is_secondary,
-            )
-            # print(dfi.index)
-            # print(df.index)
-            # this_index = dfi.index[0]
-            # print(this_index)
-            # print(dfi.loc[this_index])
-            # print(df.loc[this_index])
+    found_ids  = not (ids is None or len(ids) < 1 ) 
+    found_cats = not (cats is None or len(cats) < 1)
+    print(found_ids, found_cats, ids, cats)
+    if not found_ids and not found_cats:
+        return fig, df.to_dict("records"), [{"name": i, "id": i, "hideable": True, 'selectable':True} for i in df.columns if i != 'id'],
+    elif found_cats and not found_ids:
+        for i, cati in enumerate(cats):
+            dfi = df.loc[df['reading_type'] == cati]
             indices += list(dfi.index)
-    # print(indices)
-    # print(df.shape)
-    # print(df.loc[indices].shape)
-
+    elif found_ids and not found_cats:
+        for j, idj in enumerate(ids):
+            dfi = df.loc[df['channel_id'] == idj]
+            indices += list(dfi.index)
+    else:
+        for i, cati in enumerate(cats):
+            is_secondary = (i % 2 != 0)
+            for j, idj in enumerate(ids):
+                dfi = df.loc[df['channel_id'] == idj].loc[df['reading_type'] == cati]
+                fig.add_trace(
+                    go.Scatter(
+                        x=dfi['time'], 
+                        y=dfi['reading'],
+                        name=f'{idj} | {cati}'
+                    ),
+                    secondary_y=is_secondary,
+                )
+                indices += list(dfi.index)
 
     return fig, df.loc[indices].to_dict("records"), [{"name": i, "id": i, "hideable": True, 'selectable':True} for i in df.columns if i != 'id'],
 
