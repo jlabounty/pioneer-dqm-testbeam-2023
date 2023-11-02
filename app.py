@@ -69,60 +69,70 @@ app.layout = html.Div([
     dcc.Interval(id = 'update-constants',
                 interval=100*1000, # in milliseconds
                 n_intervals=0),
-    # html.H1('Multi-page app with Dash Pages'),
-    # html.Div([
-    #     daq.BooleanSwitch(id='do-update', on=True,label='Update Data', style={'display': 'inline-block'}),
-    #     dbc.Button('Update Now', id='do-update-now', style={'display': 'inline-block'}),
-    #     dbc.Button('Reset Histograms + Trends', id='reset-histograms', style={'display': 'inline-block'}),
-    #     dbc.Button('Update Constants', id='update-constants-now', n_clicks=0, style={'display': 'inline-block'}),
-    #     dbc.DropdownMenu(
-    #         [dbc.DropdownMenuItem(
-    #         f"{page['name']}", href=page['relative_path']
-    #         ) for page in  dash.page_registry.values()],
-    #         label='Page Navigation',
-    #         style={'display': 'inline-block'}
-    #     ),
-    #     dcc.Slider(
-    #             id='update-rate',
-    #             min=1,
-    #             max=20,
-    #             step=1,
-    #             value=15,
-    #             # style={'display': 'inline-block'}
-    #         ),
-    # ]),
-    dbc.NavbarSimple(
-        brand="PIONEER DQM",
-        brand_href="/",
-        color="primary",
-        dark=True,
-        children = [
-            daq.BooleanSwitch(id='do-update', on=True,label='Update Data', style={'display': 'inline-block'}),
-            dbc.Button('Update Now', id='do-update-now', style={'display': 'inline-block'}),
-            dbc.Button('Reset Histograms + Trends', id='reset-histograms', style={'display': 'inline-block'}),
-            dbc.Button('Update Constants', id='update-constants-now', n_clicks=0, style={'display': 'inline-block'}),
+    # dbc.NavbarSimple(
+    dbc.Navbar(
+        [
+        dbc.Container([
+            html.A(
+                dbc.Row([
+                    dbc.Col(html.Img(src='/logo', height="50px")),
+                    dbc.Col(dbc.NavbarBrand("Testbeam 2023 DQM")),
+                ],align='center'),
+            href='/'),
+            dbc.Row(
+                [
+                    dbc.Col(daq.NumericInput(
+                        id='update-rate',
+                        value=3,
+                        min=1,
+                        max=30,
+                        label='Update Frequency (s)',
+                        labelPosition='bottom',
+                        # style={'display': 'inline-block'}
+                    ), width="auto"),
+                    dbc.Col(daq.BooleanSwitch(id='do-update', on=True,label='Update Data', labelPosition='bottom', style={'display': 'inline-block'}), width="auto"),
+
+                ], align='center'
+            )
+            # style={'display': 'inline-block'}
+        ],
+
+        ),
+        dbc.Container([
+            dbc.Button('Update Traces', id='do-update-now', style={'display': 'inline-block'}, href='#'),
+            dbc.Button('Update Constants', id='update-constants-now', n_clicks=0, style={'display': 'inline-block'}, href='#'),
+            dbc.Button('Reset Histograms + Trends', id='reset-histograms', style={'display': 'inline-block'}, href='#'),
             dbc.Button('Elog',href='https://maxwell.npl.washington.edu/elog/pienuxe/R23/', target='_blank', id='elog_link', style={'display': 'inline-block'}),
             dbc.DropdownMenu(
                 [dbc.DropdownMenuItem(
                 f"{page['name']}", href=page['relative_path']
                 ) for page in  dash.page_registry.values()],
                 label='Page Navigation',
-                style={'display': 'inline-block'}
+                style={'display': 'inline-block'},
+                align_end=True
             ),
+        ]),
         ],
+        # brand="PIONEER DQM",
+        # brand_href="/",
+        color="primary",
+        dark=True,
+        # style={'padding':10}
+        # style={"margin-top": "15px"},
     ),
-    dcc.Slider(
-        id='update-rate',
-        min=1,
-        max=20,
-        step=1,
-        value=15,
-    ),
+    # dcc.Slider(
+    #     id='update-rate',
+    #     min=1,
+    #     max=20,
+    #     step=1,
+    #     value=15,
+    # ),
     dash.page_container
 ])
 
 @callback(Output('update-data', 'interval'), Input('update-rate', 'value' ))
 def update_refresh_rate(rate):
+    # print('updating update rate:', rate)
     return int(rate)*1000
 
 @callback(Output('traces', 'data'),
@@ -280,6 +290,9 @@ def not_found(e):
     # defining function 
     return flask.render_template("404.html") 
 
+@app.server.route('/logo')
+def logo():
+    return flask.send_file("static/pioneer-logo.png")
 
 if __name__ == '__main__':
     print("Starting app...")
