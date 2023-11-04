@@ -162,8 +162,8 @@ def update_graph(ids, cats, start_date, end_date, start_time, end_time, data):
     df = pandas.DataFrame(data)
     df['time'] = pandas.to_datetime(df['time'])
     df = df.loc[df['time'] >= t0].loc[df['time'] <= t1]
-    df.sort_values(by='time', inplace=True)
     # print(df.shape)
+    df.sort_values(by='time', inplace=True, ascending=False)
 
     indices = []
     found_ids  = not (ids is None or len(ids) < 1 ) 
@@ -186,14 +186,15 @@ def update_graph(ids, cats, start_date, end_date, start_time, end_time, data):
                 dfi = df.loc[df['channel_id'] == idj].loc[df['reading_type'] == cati]
                 fig.add_trace(
                     go.Scatter(
-                        x=dfi['time'], 
+                        x=np.array(dfi['time']), 
                         y=dfi['reading'],
                         name=f'{idj} | {cati}'
                     ),
                     secondary_y=is_secondary,
                 )
                 indices += list(dfi.index)
-
+    # dfi = df.loc[indices]
+    # dfi.sort_values(by='time', inplace=True, ascending=False)
     return fig, df.loc[indices].to_dict("records"), [{"name": i, "id": i, "hideable": True, 'selectable':True} for i in df.columns if i != 'id'],
 
 

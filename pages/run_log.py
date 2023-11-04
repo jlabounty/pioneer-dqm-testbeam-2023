@@ -27,8 +27,6 @@ layout = html.Div([
     dbc.Container([
         html.Button("Download Runlog", id="btn_csv"),
         dcc.Download(id="download-runlog-csv"),
-        # dbc.Label('Click a cell in the table:'),
-        # dash_table.DataTable(df.to_dict('records'),[{"name": i, "id": i} for i in df.columns], id='runlog-table'),
         dash_table.DataTable(
             id='runlog-table',
             filter_action="native",
@@ -54,9 +52,8 @@ layout = html.Div([
                 'textOverflow': 'ellipsis',
             },
         ),
-        # dbc.Alert(id='nearline_file_list'),
         html.Div(id='nearline_file_list'),
-        dbc.Alert(id='runlog_table_out'),
+        # dbc.Alert(id='runlog_table_out'),
         ],
         # style={'overflowX': 'scroll'}
     )
@@ -75,7 +72,7 @@ layout = html.Div([
 )
 def fill_columns(update_constants, do_update, update_constants_now, existing_data, existing_columns, run_log_data):
     # with helpers.time_section("fill-datatable"):
-    print(f'{existing_data=}')
+    # print(f'{existing_data=}')
     if(run_log_data is not None):
         df = pandas.DataFrame(run_log_data)
     elif(existing_data is not None):
@@ -92,13 +89,13 @@ def fill_columns(update_constants, do_update, update_constants_now, existing_dat
     else:
         return existing_data, existing_columns
 
-@callback(
-    Output('runlog_table_out', 'children'), 
-    Input('runlog-table', 'active_cell')
-)
-def update_graphs(active_cell):
-    print(f'{active_cell=}')
-    return str(active_cell) if active_cell else "Click the table"
+# @callback(
+#     Output('runlog_table_out', 'children'), 
+#     Input('runlog-table', 'active_cell')
+# )
+# def update_graphs(active_cell):
+#     print(f'{active_cell=}')
+#     return str(active_cell) if active_cell else "Click the table"
 
 
 @callback(
@@ -128,8 +125,8 @@ def show_nearline_files_selected_rows(selected_rows, selected_cells, run_log_dat
         ]
         for x in selected_rows:
             row = df.iloc[x]
-            print(f'Found row: {row["run_number"]}')
-            print(row)
+            # print(f'Found row: {row["run_number"]}')
+            # print(row)
             nli = nl.loc[nl['run_number'] == row['run_number']]#.loc[nl['Subrun'] == row['Subrun']]
             
             if nli.shape[0] > 0:
@@ -150,7 +147,7 @@ def show_nearline_files_selected_rows(selected_rows, selected_cells, run_log_dat
                     ding.append(
                                 html.A(f'Log File', href=f'/logs/{nlii["run_number"]}/{nlii["subrun_number"]}')
                     )
-                    print(ding)
+                    # print(ding)
                     output.append(html.P(ding))
         # return this_string
     if found > 0:

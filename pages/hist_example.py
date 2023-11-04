@@ -7,6 +7,7 @@ import numpy as np
 from dash import Dash, html, dcc, Output, Input, State, callback
 from dash.exceptions import PreventUpdate
 import dash
+import analysis.helpers as helpers
 
 import json
 import jsonpickle 
@@ -51,15 +52,17 @@ def update_graph(data):
             )
             for i, hii in enumerate(hi):
                 # print(category, subcategory, i, hii)
-                fig.add_trace(go.Scatter(x=hii.axes[0].centers, y=hii.values()), 
+                fig.add_trace(
+                    # go.Scatter(x=hii.axes[0].centers, y=hii.values()), 
+                    helpers.hist_to_plotly_bar(hii),
                             #   title=f'X{i}',
                             row=i+1,
                             col=1 )
             # fig.update_layout(autosize=True, height=2200, width=1200)
-            fig.update_layout(autosize=True,
+            fig.update_layout(autosize=False,
                 # height=1600,
             )
             # return fig
             output.append(html.Div([dcc.Graph(figure=fig)]))
-    print(output)
+    # print(output)
     return output

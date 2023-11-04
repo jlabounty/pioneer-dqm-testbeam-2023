@@ -163,3 +163,5 @@ test
 pages_test
 slack/daq_alarm.sh
 **.json
+cache
+cache-directory

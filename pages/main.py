@@ -12,18 +12,14 @@ import dash
 dash.register_page(__name__, path='/')
 
 layout = html.Div([
-    html.H4('Plot an array of traces'),
+    # html.H4('Plot an array of traces'),
     html.Div([
         dcc.Graph(id="t0-trace" , style={'display': 'inline-block'}),
-        # dcc.Graph(id="t0-proton" , style={'display': 'inline-block'}),
-        dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
-        # html.Div([
-        #     dcc.Graph(id="hodo-y-bar", style={'display': 'inline-block'}),
-        # ]),
+        dcc.Graph(id="trace-array", style={'display': 'inline-block'}),
     ]),
     html.Div([
         dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
-        dcc.Graph(id="trace-array", style={'display': 'inline-block'}),
+        dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
     ]),
 ])
 

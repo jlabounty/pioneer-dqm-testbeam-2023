@@ -10,6 +10,9 @@ import pandas
 import hist
 import psycopg2
 import pandas
+import pandas.io.sql as sqlio
+import plotly.graph_objects as go
+import zmq
 
 # base directories
 ONLINE_DIR = '/home/jlab/testbeam_example_files/online/'
@@ -28,7 +31,8 @@ def read_from_socket(socket,message='TRACES'):
     # TODO: make this robust against timeout
     # #TODO: clean this up now that we're in PUB/SUB mode
     # with time_section(f" read_from_socket | {message} "):
-    topic, mout = socket.recv_multipart()
+    print(f"executing new call with message '{message}'")
+    topic, mout = socket.recv_multipart(zmq.NOBLOCK)
     mout = mout.decode()
     lenmsg = len(mout)
     try:
@@ -144,48 +148,46 @@ def process_odb_json_for_runlog(fi):
         # continue
     return output
 
+def read_from_db(
+    command,
+    db_connection
+):
+    # return sqlio.read_sql_query(command, db_connection)
+    # with time_section(f"read from db {command}"):
+    with db_connection.connect() as connection:
+        return pandas.read_sql(command, connection)
+
+
 def create_updated_runlog(
-    df=None, 
-    db_connection=None,
+    db_connection,
 ):
     '''reads in the online database filled by midas and udpates the internal nearline run log'''
     # TODO: change to db access
-    if db_connection is None:
-        raise NotImplementedError
-    df = pandas.read_sql('select * from online order by run_number desc;', con=db_connection)
-    # df.to_csv("runlog.csv")
-    # print(df.head())
-    # print(df.index)
-    # print(df.head())
+    df = read_from_db('select * from online order by run_number desc;', db_connection)
 
     return df
 
 def create_updated_subrun_list(
-    db_connection=None,
+    db_connection,
 ):
     '''looks for files in the specified directories and creates a list of files for jsroot to open
         assume the file looks like: /path/to/nearline_hists_run00338_00005.root
     '''
     # TODO: change to db access
-    if db_connection is None:
-        raise NotImplementedError
-    df = pandas.read_sql('select * from nearline_processing order by (run_number, subrun_number) desc;', con=db_connection)
+    df = read_from_db('select * from nearline_processing order by (run_number, subrun_number) desc;', db_connection)
     return df
 
-
 def create_updated_slow_control(
-    db_connection=None,
-    limit = 100_000
+    db_connection,
+    limit = 10_000
 ):
     '''looks for files in the specified directories and creates a list of files for jsroot to open
         assume the file looks like: /path/to/nearline_hists_run00338_00005.root
     '''
     # TODO: change to db access, make this work better, set up queue
-    if db_connection is None:
-        raise NotImplementedError
-    with time_section("fetch slow control"):
-        df = pandas.read_sql(f'select * from slow_control order by random() limit {limit};', con=db_connection)
-        df.sort_values(by='time', inplace=True)
+    # with time_section("fetch slow control"):
+    df = read_from_db(f'select * from slow_control order by time desc limit {limit};', db_connection)
+    df.sort_values(by='time', inplace=True)
     return df
 
 def make_nearline_file_path(run,subrun):
@@ -193,3 +195,11 @@ def make_nearline_file_path(run,subrun):
 
 def make_nearline_log_file_path(run,subrun):
     return os.path.join(LOG_DIR, f'nearline_run{int(run):05}_{int(subrun):05}.log')
+
+
+
+def hist_to_plotly_bar(h:hist.Hist):
+    return go.Bar(
+        x = h.axes[0].centers,
+        y = h.values(),
+    )
