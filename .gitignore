@@ -165,3 +165,4 @@ slack/daq_alarm.sh
 **.json
 cache
 cache-directory
+profile-logs

@@ -35,10 +35,10 @@ def read_from_socket(socket,message='TRACES'):
     topic, mout = socket.recv_multipart(zmq.NOBLOCK)
     mout = mout.decode()
     lenmsg = len(mout)
-    try:
-        mout = ast.literal_eval(mout)
-    except:
-        print(f"Warning: error doing 'literal_eval' of {topic} -> '{mout[:10]}...'")
+    # try:
+    #     mout = ast.literal_eval(mout)
+    # except:
+    #     print(f"Warning: error doing 'literal_eval' of {topic} -> '{mout[:10]}...'")
     # if(len(mout) > 0):
     #     with open(f"{message}.out",'a') as fout:
     #         fout.write(str(mout)+"\n")
@@ -53,8 +53,10 @@ def process_raw(data):
             3) Seperates the hodoscope traces into seperate X/Y arrays, Breaks out the xtals
             4) Does pedestal subtraction and pulse integration
     '''
-    output = data.copy()
-    for i,x in enumerate(data):
+    # output = data.copy()
+    output = data
+    keys = list(data.keys())
+    for i,x in enumerate(keys):
         if 'traces' in x:
             intname = x.replace("traces_",'integrals_')
             output[intname] = [0 for _ in data[x]]

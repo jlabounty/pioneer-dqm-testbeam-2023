@@ -38,4 +38,4 @@ while True:
     #     continue
     print(counter, topic,len(message), message[:5])
     socket.send_multipart([topic, json.dumps(odb).encode()])
-    time.sleep(1)
+    time.sleep(.5)

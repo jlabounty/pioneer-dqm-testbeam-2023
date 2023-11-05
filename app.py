@@ -26,6 +26,9 @@ import diskcache
 from dash import DiskcacheManager
 from uuid import uuid4
 
+# profiling performance
+from werkzeug.middleware.profiler import ProfilerMiddleware
+
 
 # ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
@@ -265,16 +268,17 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
         try:
             # data = helpers.read_from_socket(socket,message='TRACES')
             # with helpers.time_section("cached_read_traces"):
-            data = read_from_socket_cached(socket,message='TRACES')
+            data = ast.literal_eval(read_from_socket_cached(socket,message='TRACES'))
+            # print(data)
         except:
             print("Warning: Unable to get next traces")
             return existing_data, existing_histograms, True
         # print(data)
-        processed = [helpers.process_raw(ast.literal_eval(x)) for x in data]
+        processed = [helpers.process_raw(orjson.loads(x)) for x in data]
         if( ctx.triggered_id == 'reset-histograms' ):
-            return helpers.process_raw(processed[-1]), helpers.create_histograms(processed),False # only add the latest traces to the data store
+            return processed[-1], helpers.create_histograms(processed),False # only add the latest traces to the data store
         else:
-            return helpers.process_raw(processed[-1]), helpers.append_histograms(existing_histograms, processed),False # only add the latest traces to the data store
+            return processed[-1], helpers.append_histograms(existing_histograms, processed),False # only add the latest traces to the data store
             
     else:
         # return existing_data, helpers.append_histograms(existing_histograms, processed)
@@ -418,5 +422,17 @@ def logo():
 
 if __name__ == '__main__':
     print("Starting app...")
+
+    # profiler mode
+    # app.server.config["PROFILE"] = True
+    # app.server.wsgi_app = ProfilerMiddleware(
+    #     app.server.wsgi_app, 
+    #     sort_by=("cumtime", "tottime"), 
+    #     restrictions=[50],
+    #     stream=None,
+    #     profile_dir='./profile-logs/'
+    # )
+
     app.run(debug=True) #debug mode
+
     # app.run_server() #works with gunicorn
