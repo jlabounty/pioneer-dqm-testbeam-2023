@@ -264,7 +264,6 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
         # print("updating traces...")
         # with helpers.time_section(tag='update_traces'):
-        # TODO: Make robust against timeout/other error
         try:
             # data = helpers.read_from_socket(socket,message='TRACES')
             # with helpers.time_section("cached_read_traces"):
@@ -298,7 +297,6 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
 #     # print(type(existing_data))
 #     return None, False
 #     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
-#         # TODO: Make robust against timeout/other error
 #         if( ctx.triggered_id == 'reset-histograms' ):
 #             message = 'RESETTREND'
 #         else:
@@ -311,17 +309,18 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
 #         return existing_data
 
 @callback(Output('constants', 'data'),
+        Output('db-update-toast', 'is_open', allow_duplicate=True),
         Input('update-constants', 'n_intervals'), 
         Input('do-update', 'on'),
         Input('constants', 'data'),
         Input('update-constants-now', 'n_clicks'),
+        prevent_initial_call=True
 )
 # @cache.cached(timeout=ODB_TIMEOUT)
 def update_constants(n, do_update, existing_data, button_clicks, socket=odb_socket):
     # print(type(existing_data))
     # print(existing_data)
     if(do_update or ctx.triggered_id == 'update-constants-now'):
-        # TODO: Make robust against timeout/other error
         # print("*****************************************************************reading constants")
         try:
             data = read_from_socket_cached(socket, message='CONST')

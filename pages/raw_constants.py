@@ -22,17 +22,10 @@ layout = html.Div(
 
 @callback(Output('constants-dump', 'children'), Input('constants', 'data'))
 def update_header(data):
-    # print(json.dumps(data,indent=2))
-    # ding =  [html.H1('Current store value:') ]
-    # ding =  [html.H1(f'Current store value: {data}') ]
+    # print(data)
     ding =  [html.H1(f'Current store value:') ]
-    ding =  [html.P(f'{data}') ]
-    # for key,x in data.items():
-    #     # print(key, x)
-    #     if 'traces' in key:
-    #         ding += [html.P('traces')]
-    #         for i,xi in enumerate(x):
-    #             ding += [html.P(f'    Trace {i} -> {xi}')]
-    #     else:
-    #         ding += [html.P(f'{key}: {x}')]
-    # return ding
+    ding.append(html.Pre([json.dumps(json.loads(data),indent=2)]))
+    # for x in .split("\n"):
+    #     # print(x)
+    #     ding.append(html.P(x))
+    return ding
