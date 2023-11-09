@@ -28,20 +28,10 @@ def read_from_socket(socket,message='TRACES'):
     '''
         Given an existing websocket, read the latest traces
     '''
-    # TODO: make this robust against timeout
-    # #TODO: clean this up now that we're in PUB/SUB mode
     # with time_section(f" read_from_socket | {message} "):
     print(f"executing new call with message '{message}'")
     topic, mout = socket.recv_multipart(zmq.NOBLOCK)
     mout = mout.decode()
-    lenmsg = len(mout)
-    # try:
-    #     mout = ast.literal_eval(mout)
-    # except:
-    #     print(f"Warning: error doing 'literal_eval' of {topic} -> '{mout[:10]}...'")
-    # if(len(mout) > 0):
-    #     with open(f"{message}.out",'a') as fout:
-    #         fout.write(str(mout)+"\n")
     return mout
         
 
@@ -164,7 +154,6 @@ def create_updated_runlog(
     db_connection,
 ):
     '''reads in the online database filled by midas and udpates the internal nearline run log'''
-    # TODO: change to db access
     df = read_from_db('select * from online order by run_number desc;', db_connection)
 
     return df
@@ -175,7 +164,6 @@ def create_updated_subrun_list(
     '''looks for files in the specified directories and creates a list of files for jsroot to open
         assume the file looks like: /path/to/nearline_hists_run00338_00005.root
     '''
-    # TODO: change to db access
     df = read_from_db('select * from nearline_processing order by (run_number, subrun_number) desc;', db_connection)
     return df
 
@@ -186,10 +174,9 @@ def create_updated_slow_control(
     '''looks for files in the specified directories and creates a list of files for jsroot to open
         assume the file looks like: /path/to/nearline_hists_run00338_00005.root
     '''
-    # TODO: change to db access, make this work better, set up queue
     # with time_section("fetch slow control"):
     df = read_from_db(f'select * from slow_control order by time desc limit {limit};', db_connection)
-    df.sort_values(by='time', inplace=True)
+    # df.sort_values(by='time', inplace=True)
     return df
 
 def make_nearline_file_path(run,subrun):
