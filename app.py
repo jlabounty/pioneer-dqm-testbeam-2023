@@ -209,7 +209,7 @@ app.layout = html.Div([
         dismissable=True,
         icon="danger",
         # top: 66 positions the toast below the navbar
-        # style={"position": "fixed", "top": 66, "right": 10, "width": 350},
+        style={"position": "fixed", "top": 66, "right": 10, "width": 350},
     ),
     dbc.Toast(
         "Unable to fetch new traces",
@@ -284,29 +284,31 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
         # return existing_data, helpers.append_histograms(existing_histograms, processed)
         return existing_data, existing_histograms, False
     
-@callback(Output('trends', 'data'),
-        Input('update-data', 'n_intervals'), 
-        Input('do-update', 'on'),
-        Input('do-update-now', 'n_clicks'), 
-        Input('reset-histograms', 'n_clicks'), 
-        Input('traces', 'data'),
-)
-# @cache.cached(timeout=TREND_TIMEOUT)
-def update_trends(n, do_update, do_update_now, reset_histograms, existing_data, socket=odb_socket):
-    # print(type(existing_data))
-    return None
-    if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
-        # TODO: Make robust against timeout/other error
-        if( ctx.triggered_id == 'reset-histograms' ):
-            message = 'RESETTREND'
-        else:
-            message = 'TREND'
-        # data = helpers.read_from_socket(socket,message=message)
-        data = read_from_socket_cached(socket,message=message)
-        # print('trend data:', data)
-        return helpers.process_trends(data)
-    else:
-        return existing_data
+# @callback(Output('trends', 'data'),
+#         Output('db-update-toast', 'is_open', allow_duplicate=True),
+#         Input('update-data', 'n_intervals'), 
+#         Input('do-update', 'on'),
+#         Input('do-update-now', 'n_clicks'), 
+#         Input('reset-histograms', 'n_clicks'), 
+#         Input('traces', 'data'),
+#         prevent_initial_call=True
+# )
+# # @cache.cached(timeout=TREND_TIMEOUT)
+# def update_trends(n, do_update, do_update_now, reset_histograms, existing_data, socket=odb_socket):
+#     # print(type(existing_data))
+#     return None, False
+#     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
+#         # TODO: Make robust against timeout/other error
+#         if( ctx.triggered_id == 'reset-histograms' ):
+#             message = 'RESETTREND'
+#         else:
+#             message = 'TREND'
+#         # data = helpers.read_from_socket(socket,message=message)
+#         data = read_from_socket_cached(socket,message=message)
+#         # print('trend data:', data)
+#         return helpers.process_trends(data)
+#     else:
+#         return existing_data
 
 @callback(Output('constants', 'data'),
         Input('update-constants', 'n_intervals'), 
@@ -324,61 +326,79 @@ def update_constants(n, do_update, existing_data, button_clicks, socket=odb_sock
         try:
             data = read_from_socket_cached(socket, message='CONST')
             # print(data)
-            return data
+            return data, False
         except:
             print("Warning: unable to read ODB")
-            return existing_data
+            return existing_data, True
     else:
-        return existing_data
+        return existing_data, False
 
 @callback(Output('nearline-files', 'data'),
+        Output('db-update-toast', 'is_open', allow_duplicate=True),
         Input('update-constants', 'n_intervals'), 
         Input('do-update', 'on'),
         Input('update-constants-now', 'n_clicks'),
         Input('nearline-files', 'data'),
+        prevent_initial_call=True
 )
 # @cache.cached(timeout=NEARLINE_TIMEOUT)
 def update_nearline_file_list(n, do_update, button_clicks, existing_data):
     # print(type(existing_data))
     if(do_update or ctx.triggered_id == 'update-constants-now'):
-        ding =  create_updated_subrun_list_cached(reader_engine)
+        try:
+            ding = create_updated_subrun_list_cached(reader_engine)
+        except:
+            print("Warning: unable to get updates nearline files")
+            return existing_data, True
         # print(ding)
         ding['available'] = ding['nearline_file_location'].apply(os.path.exists)
-        return ding.to_dict()
+        return ding.to_dict(),False
     else:
-        return existing_data
+        return existing_data,False
 
 @callback(Output('run-log', 'data'),
+        Output('db-update-toast', 'is_open'),
         Input('update-constants', 'n_intervals'), 
         Input('do-update', 'on'),
         Input('update-constants-now', 'n_clicks'),
         Input('run-log', 'data'),
+        prevent_initial_call=True
 )
 # @cache.cached(timeout=RUNLOG_TIMEOUT)
 def update_run_log(n, do_update, button_clicks, existing_data):
     # print(type(existing_data))
     if(do_update or ctx.triggered_id == 'update-constants-now'):
-        ding = create_updated_runlog_cached(reader_engine).to_dict() 
+        try:
+            ding = create_updated_runlog_cached(reader_engine).to_dict() 
+        except:
+            print("Warning: unable to get updated run log")
+            return existing_data, True
         # print(ding)
-        return ding
+        return ding,False
     else:
-        return existing_data
+        return existing_data,False
 
 @callback(Output('slow-control', 'data'),
+        Output('db-update-toast', 'is_open', allow_duplicate=True),
         Input('update-constants', 'n_intervals'), 
         Input('do-update', 'on'),
         Input('update-constants-now', 'n_clicks'),
         Input('slow-control', 'data'),
+        prevent_initial_call=True
 )
 # @cache.cached(timeout=SLOW_CONTROL_TIMEOUT)
 def update_slow_control_data(n, do_update, button_clicks, existing_data):
     # print(type(existing_data))
     if(do_update or ctx.triggered_id == 'update-constants-now'):
-        ding = create_updated_slow_control_cached(reader_engine).to_dict() 
+        try:
+            ding = create_updated_slow_control_cached(reader_engine).to_dict() 
+        except:
+            print("Warning: unable to get slow control")
+            return existing_data, True
         # print(ding)
-        return ding
+        return ding,False
     else:
-        return existing_data
+        return existing_data,False
 
 
 # Functions to display jsroot files
