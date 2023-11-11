@@ -85,6 +85,11 @@ def create_updated_slow_control_cached(reader_engine):
     print("updating cached version of 'create_updated_slow_control'...")
     return helpers.create_updated_slow_control(reader_engine)
 
+@cache.memoize(timeout=SLOW_CONTROL_TIMEOUT)
+def create_updated_channel_map_cached(reader_engine):
+    print("updating cached version of 'create_updated_channel_map'...")
+    return helpers.create_updated_channel_map(reader_engine)
+
 # ----------------------------------------------------------------------------
 # ----------------------------------------------------------------------------
 
@@ -123,6 +128,7 @@ app.layout = html.Div([
     dcc.Store(id='run-log', storage_type='session'),
     dcc.Store(id='nearline-files', storage_type='session'),
     dcc.Store(id='slow-control', storage_type='session'),
+    dcc.Store(id='channel-map', storage_type='session'),
     dcc.Interval(id = 'update-data',
                  interval=15*1000, # in milliseconds
                  n_intervals=0),
@@ -138,8 +144,11 @@ app.layout = html.Div([
         dbc.Container([
             html.A(
                 dbc.Row([
-                    dbc.Col(html.Img(src='/logo', height="50px")),
-                    dbc.Col(dbc.NavbarBrand("Testbeam 2023 DQM")),
+                    dbc.Col([
+                        dbc.Row([html.Img(src='/logo', height="50px"),],align='center'),
+                        dbc.Row([dbc.NavbarBrand("Testbeam 2023 DQM")],align='center'),
+                    ]),
+                    # dbc.Col(dbc.NavbarBrand("Testbeam 2023 DQM")),
                 ],align='center'),
             href='/'),
             dbc.Row(
@@ -163,10 +172,11 @@ app.layout = html.Div([
 
         ),
         dbc.Container([
-            dbc.Button('Update Traces', id='do-update-now', style={'display': 'inline-block'}, href='#'),
-            dbc.Button('Update Constants', id='update-constants-now', n_clicks=0, style={'display': 'inline-block'}, href='#'),
-            dbc.Button('Reset Histograms + Trends', id='reset-histograms', style={'display': 'inline-block'}, href='#'),
-            dbc.Button('Elog',href='https://maxwell.npl.washington.edu/elog/pienuxe/R23/', target='_blank', id='elog_link', style={'display': 'inline-block'}),
+            dbc.Button('Update Traces', id='do-update-now', style={'display': 'inline-block'}, href='#', size="sm"),
+            dbc.Button('Update Constants', id='update-constants-now', n_clicks=0, style={'display': 'inline-block'}, href='#', size="sm"),
+            dbc.Button('Reset Histograms + Trends', id='reset-histograms', style={'display': 'inline-block'}, href='#', size="sm"),
+            dbc.Button('Elog',href='https://maxwell.npl.washington.edu/elog/pienuxe/R23/', target='_blank', id='elog_link', style={'display': 'inline-block'}, size="sm"),
+            dbc.Button('Run Priorities',href='https://docs.google.com/spreadsheets/d/1gfpCICcEc2EJ55aq40GWMzIJlA6JtqRwJkGiXH2-Nsw/edit#gid=0', target='_blank', id='run_priority_link', style={'display': 'inline-block'}, size="sm"),
             dbc.DropdownMenu(
                 [dbc.DropdownMenuItem(
                 f"{page['name']}", href=page['relative_path']
@@ -393,6 +403,28 @@ def update_slow_control_data(n, do_update, button_clicks, existing_data):
             ding = create_updated_slow_control_cached(reader_engine).to_dict() 
         except:
             print("Warning: unable to get slow control")
+            return existing_data, True
+        # print(ding)
+        return ding,False
+    else:
+        return existing_data,False
+
+@callback(Output('channel-map', 'data'),
+        Output('db-update-toast', 'is_open', allow_duplicate=True),
+        Input('update-constants', 'n_intervals'), 
+        Input('do-update', 'on'),
+        Input('update-constants-now', 'n_clicks'),
+        Input('channel-map', 'data'),
+        prevent_initial_call=True
+)
+# @cache.cached(timeout=SLOW_CONTROL_TIMEOUT)
+def update_channel_map_data(n, do_update, button_clicks, existing_data):
+    # print(type(existing_data))
+    if(do_update or ctx.triggered_id == 'update-constants-now'):
+        try:
+            ding = create_updated_channel_map_cached(reader_engine).to_dict() 
+        except:
+            print("Warning: unable to get channel mapping")
             return existing_data, True
         # print(ding)
         return ding,False

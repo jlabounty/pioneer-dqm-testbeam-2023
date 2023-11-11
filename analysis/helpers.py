@@ -161,9 +161,6 @@ def create_updated_runlog(
 def create_updated_subrun_list(
     db_connection,
 ):
-    '''looks for files in the specified directories and creates a list of files for jsroot to open
-        assume the file looks like: /path/to/nearline_hists_run00338_00005.root
-    '''
     df = read_from_db('select * from nearline_processing order by (run_number, subrun_number) desc;', db_connection)
     return df
 
@@ -171,11 +168,19 @@ def create_updated_slow_control(
     db_connection,
     limit = 10_000
 ):
-    '''looks for files in the specified directories and creates a list of files for jsroot to open
-        assume the file looks like: /path/to/nearline_hists_run00338_00005.root
-    '''
     # with time_section("fetch slow control"):
     df = read_from_db(f'select * from slow_control order by time desc limit {limit};', db_connection)
+    # df.sort_values(by='time', inplace=True)
+    return df
+
+def create_updated_channel_map(
+    db_connection,
+    limit = 10_000
+):
+    # with time_section("fetch slow control"):
+    # print('reading channel mapping')
+    df = read_from_db(f'select * from channel_mapping order by configuration_id DESC, wfd5 ASC, channel ASC limit {limit};', db_connection)
+    # print(df)
     # df.sort_values(by='time', inplace=True)
     return df
 
