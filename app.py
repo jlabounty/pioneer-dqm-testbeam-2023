@@ -105,17 +105,19 @@ reader_engine = sqlalchemy.create_engine(db_url)
 
 # connect to the zmq PUB from the online
 context = zmq.Context()
-port = 5555 # real
-#port = 5556 # fake
+# port = 5555 # real
+port = 5556 # fake
 
-data_socket = context.socket(zmq.SUB)
-data_socket.connect(f"tcp://localhost:{port}")
-data_socket.setsockopt(zmq.SUBSCRIBE, b"DATA")
+# data_socket = context.socket(zmq.SUB)
+# data_socket.connect(f"tcp://localhost:{port}")
+# data_socket.setsockopt(zmq.SUBSCRIBE, b"DATA")
+data_socket = None
 # data_socket.setsockopt(zmq.ZMQ_RCVTIMEO, 5000)
 
-odb_socket = context.socket(zmq.SUB)
-odb_socket.connect(f"tcp://localhost:{port}")
-odb_socket.setsockopt(zmq.SUBSCRIBE, b"ODB")
+# odb_socket = context.socket(zmq.SUB)
+# odb_socket.connect(f"tcp://localhost:{port}")
+# odb_socket.setsockopt(zmq.SUBSCRIBE, b"ODB")
+odb_socket = None
 # odb_socket.setsockopt(zmq.ZMQ_RCVTIMEO, 5000)
 # odb_socket = None
 print("Sockets:", data_socket, odb_socket)

@@ -35,10 +35,30 @@ def read_from_socket(socket,message='TRACES'):
     '''
         Given an existing websocket, read the latest traces
     '''
+    context = zmq.Context()
+
+    port = 5556
+    match message:
+        case 'TRACES':
+            socket = context.socket(zmq.SUB)
+            socket.connect(f"tcp://localhost:{port}")
+            socket.setsockopt(zmq.SUBSCRIBE, b"DATA")
+        case 'CONST':
+            socket = context.socket(zmq.SUB)
+            socket.connect(f"tcp://localhost:{port}")
+            socket.setsockopt(zmq.SUBSCRIBE, b"ODB")
+        case _:
+            print(f"Warning: socket not found for message '{message}'")
+    time.sleep(0.1)
+    # odb_socket.setsockopt(zmq.ZMQ_RCVTIMEO, 5000)
+    # odb_socket = None
+    # print("Sockets:", data_socket, odb_socket)
     # with time_section(f" read_from_socket | {message} "):
     print(f"executing new call with message '{message}'")
     topic, mout = socket.recv_multipart(zmq.NOBLOCK)
     mout = mout.decode()
+    # mout = socket.recv(zmq.NOBLOCK).decode()
+    # print(mout)
     return mout
         
 
