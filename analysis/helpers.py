@@ -50,6 +50,7 @@ def process_raw(data):
             3) Seperates the hodoscope traces into seperate X/Y arrays, Breaks out the xtals
             4) Does pedestal subtraction and pulse integration
     '''
+    print("processing data")
     # output = data.copy()
     output = data
     keys = list(data.keys())

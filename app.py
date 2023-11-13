@@ -105,8 +105,8 @@ reader_engine = sqlalchemy.create_engine(db_url)
 
 # connect to the zmq PUB from the online
 context = zmq.Context()
-# port = 5555 # real
-port = 5556 # fake
+port = 5555 # real
+#port = 5556 # fake
 
 data_socket = context.socket(zmq.SUB)
 data_socket.connect(f"tcp://localhost:{port}")
@@ -278,12 +278,14 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
             # data = helpers.read_from_socket(socket,message='TRACES')
             # with helpers.time_section("cached_read_traces"):
             data = ast.literal_eval(read_from_socket_cached(socket,message='TRACES'))
-            # print(data)
+            #print(data)
         except:
             print("Warning: Unable to get next traces")
             return existing_data, existing_histograms, True
         # print(data)
         processed = [helpers.process_raw(orjson.loads(x)) for x in data]
+        #print(processed[-1])
+        print("displaying event: ", processed[-1]['event'])
         if( ctx.triggered_id == 'reset-histograms' ):
             return processed[-1], helpers.create_histograms(processed),False # only add the latest traces to the data store
         else:
@@ -488,7 +490,7 @@ if __name__ == '__main__':
             app.run(debug=True, port=8051) #debug mode
         case 'pioneer-nuci':
             print("Warning: you should be running this with gunicorn")
-            app.run(debug=False) #debug mode
+            app.run(debug=True) #debug mode
         case _:
             raise NotImplementedError
 
