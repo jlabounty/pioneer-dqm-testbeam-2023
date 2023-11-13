@@ -123,7 +123,7 @@ print("Sockets:", data_socket, odb_socket)
 app.layout = html.Div([
     dcc.Store(id='traces', storage_type='session'),
     dcc.Store(id='constants', storage_type='session'),
-    dcc.Store(id='trends', storage_type='session'),
+    # dcc.Store(id='trends', storage_type='session'),
     dcc.Store(id='histograms', storage_type='session'),
     dcc.Store(id='run-log', storage_type='session'),
     dcc.Store(id='nearline-files', storage_type='session'),
@@ -483,7 +483,13 @@ if __name__ == '__main__':
     #     stream=None,
     #     profile_dir='./profile-logs/'
     # )
-
-    app.run(debug=True) #debug mode
+    match os.uname()[1]:
+    case 'SB3':
+        app.run(debug=True, port=8051) #debug mode
+    case 'pioneer-nuci':
+        print("Warning: you should be running this with gunicorn")
+        app.run(debug=False) #debug mode
+    case _:
+        raise NotImplementedError
 
     # app.run_server() #works with gunicorn

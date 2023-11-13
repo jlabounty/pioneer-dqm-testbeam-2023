@@ -15,10 +15,17 @@ import plotly.graph_objects as go
 import zmq
 
 # base directories
-ONLINE_DIR = '/home/jlab/testbeam_example_files/online/'
-BASE_DIR = '/home/jlab/testbeam_example_files/nearline/'
-LOG_DIR = '/home/jlab/testbeam_example_files/nearline_logs/'
-
+match os.uname()[1]:
+    case 'SB3':
+        ONLINE_DIR = '/home/jlab/testbeam_example_files/online/'
+        BASE_DIR = '/home/jlab/testbeam_example_files/nearline/'
+        LOG_DIR = '/home/jlab/testbeam_example_files/nearline_logs/'
+    case 'pioneer-nuci':
+        ONLINE_DIR = None
+        BASE_DIR = '/home/pioneer/dqm/nearline/'
+        LOG_DIR = '/home/pioneer/dqm/nearline_logs/'
+    case _:
+        raise NotImplementedError
 # ----------------------------------------------------------
 # Helper functions for the DQM processing
 # Josh LaBounty - Sept. 2023
