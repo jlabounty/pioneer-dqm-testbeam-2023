@@ -484,12 +484,12 @@ if __name__ == '__main__':
     #     profile_dir='./profile-logs/'
     # )
     match os.uname()[1]:
-    case 'SB3':
-        app.run(debug=True, port=8051) #debug mode
-    case 'pioneer-nuci':
-        print("Warning: you should be running this with gunicorn")
-        app.run(debug=False) #debug mode
-    case _:
-        raise NotImplementedError
+        case 'SB3':
+            app.run(debug=True, port=8051) #debug mode
+        case 'pioneer-nuci':
+            print("Warning: you should be running this with gunicorn")
+            app.run(debug=False) #debug mode
+        case _:
+            raise NotImplementedError
 
     # app.run_server() #works with gunicorn
