@@ -26,16 +26,18 @@ while True:
     counter += 1
     topic = b'DATA'
     message = data[counter % len(data)]
+    message = message.replace('"event":', f'"event":{counter}, "event_raw":')
     if len(message) < 10:
         continue
-    print(counter, topic,len(message), message[:5])
+    print(counter, topic,len(message), message[:15])
     socket.send_multipart([topic, message.encode()])
 
 
     topic = b'ODB'
-    message = json.dumps(odb)
+    message = f'[{json.dumps(odb)}]'
+
     # if len(message) < 10:
     #     continue
     print(counter, topic,len(message), message[:5])
-    socket.send_multipart([topic, json.dumps(odb).encode()])
-    time.sleep(.5)
+    socket.send_multipart([topic, message.encode()])
+    time.sleep(.01)

@@ -37,13 +37,14 @@ def read_from_socket(socket,message='TRACES'):
     '''
     context = zmq.Context()
 
-    # port = 5555 #REAL
-    port = 5556
+    port = 5555 #REAL
+    # port = 5556
     match message:
         case 'TRACES':
             socket = context.socket(zmq.SUB)
             socket.connect(f"tcp://localhost:{port}")
             socket.setsockopt(zmq.SUBSCRIBE, b"DATA")
+            time.sleep(0.1)
         case 'CONST':
             socket = context.socket(zmq.SUB)
             socket.connect(f"tcp://localhost:{port}")
@@ -52,15 +53,24 @@ def read_from_socket(socket,message='TRACES'):
             socket = context.socket(zmq.SUB)
             socket.connect(f"tcp://localhost:{port}")
             socket.setsockopt(zmq.SUBSCRIBE, b"HIST")
+            time.sleep(0.6)
         case _:
             print(f"Warning: socket not found for message '{message}'")
-    time.sleep(0.1)
+    # time.sleep(.5)
     # odb_socket.setsockopt(zmq.ZMQ_RCVTIMEO, 5000)
     # odb_socket = None
     # print("Sockets:", data_socket, odb_socket)
     # with time_section(f" read_from_socket | {message} "):
     print(f"executing new call with message '{message}'")
-    topic, mout = socket.recv_multipart(zmq.NOBLOCK)
+    # topic, mout = socket.recv_multipart(zmq.NOBLOCK)
+    for i in range(10):
+        try:
+            topic, mout = socket.recv_multipart(zmq.NOBLOCK)
+            print('success on read', i, 'for', message)
+            break
+        except:
+            # print("failed on read", i, 'for', message)
+            time.sleep(.1)
     mout = mout.decode()
     # mout = socket.recv(zmq.NOBLOCK).decode()
     # print(mout)
@@ -75,7 +85,7 @@ def process_raw(data):
             3) Seperates the hodoscope traces into seperate X/Y arrays, Breaks out the xtals
             4) Does pedestal subtraction and pulse integration
     '''
-    print("processing data")
+    # print("processing data")
     # output = data.copy()
     output = data
     keys = list(data.keys())
