@@ -37,6 +37,7 @@ def read_from_socket(socket,message='TRACES'):
     '''
     context = zmq.Context()
 
+    # port = 5555 #REAL
     port = 5556
     match message:
         case 'TRACES':
@@ -47,6 +48,10 @@ def read_from_socket(socket,message='TRACES'):
             socket = context.socket(zmq.SUB)
             socket.connect(f"tcp://localhost:{port}")
             socket.setsockopt(zmq.SUBSCRIBE, b"ODB")
+        case 'HIST':
+            socket = context.socket(zmq.SUB)
+            socket.connect(f"tcp://localhost:{port}")
+            socket.setsockopt(zmq.SUBSCRIBE, b"HIST")
         case _:
             print(f"Warning: socket not found for message '{message}'")
     time.sleep(0.1)

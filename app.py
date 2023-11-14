@@ -106,20 +106,9 @@ reader_engine = sqlalchemy.create_engine(db_url)
 # connect to the zmq PUB from the online
 context = zmq.Context()
 # port = 5555 # real
-port = 5556 # fake
-
-# data_socket = context.socket(zmq.SUB)
-# data_socket.connect(f"tcp://localhost:{port}")
-# data_socket.setsockopt(zmq.SUBSCRIBE, b"DATA")
+# port = 5556 # fake
 data_socket = None
-# data_socket.setsockopt(zmq.ZMQ_RCVTIMEO, 5000)
-
-# odb_socket = context.socket(zmq.SUB)
-# odb_socket.connect(f"tcp://localhost:{port}")
-# odb_socket.setsockopt(zmq.SUBSCRIBE, b"ODB")
 odb_socket = None
-# odb_socket.setsockopt(zmq.ZMQ_RCVTIMEO, 5000)
-# odb_socket = None
 print("Sockets:", data_socket, odb_socket)
 
 app.layout = html.Div([
@@ -211,7 +200,7 @@ app.layout = html.Div([
         dismissable=True,
         icon="danger",
         # top: 66 positions the toast below the navbar
-        # style={"position": "fixed", "top": 66, "right": 10, "width": 350},
+        # style={"position": "fixed", "top": 66, "right": 10, "width": 350, "z-index":9999},
     ),
     dbc.Toast(
         "Unable to connect to psql database",
@@ -221,7 +210,7 @@ app.layout = html.Div([
         dismissable=True,
         icon="danger",
         # top: 66 positions the toast below the navbar
-        style={"position": "fixed", "top": 66, "right": 10, "width": 350},
+        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
     ),
     dbc.Toast(
         "Unable to fetch new traces",
@@ -231,7 +220,17 @@ app.layout = html.Div([
         dismissable=True,
         icon="danger",
         # top: 66 positions the toast below the navbar
-        style={"position": "fixed", "top": 66, "right": 10, "width": 350},
+        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
+    ),
+    dbc.Toast(
+        "Unable to fetch new histograms",
+        id="hist-update-failure-toast",
+        header="Error",
+        is_open=False,
+        dismissable=True,
+        icon="danger",
+        # top: 66 positions the toast below the navbar
+        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
     ),
     dash.page_container
 ])
@@ -255,14 +254,14 @@ def update_run_tracker(data):
 
 
 @callback(Output('traces', 'data'),
-        Output('histograms', 'data'),
+        # Output('histograms', 'data'),
         Output('trace-update-failure-toast', 'is_open'),
         Input('update-data', 'n_intervals'), 
         Input('do-update', 'on'),
         Input('do-update-now', 'n_clicks'), 
         Input('reset-histograms', 'n_clicks'), 
         Input('traces', 'data'),
-        Input('histograms', 'data'),
+        # Input('histograms', 'data'),
         # cache_args_to_ignore=[0,1,2,3,4,5],
         # background=True,
         # # manager=background_callback_manager,
@@ -271,7 +270,7 @@ def update_run_tracker(data):
         # ],
 )
 # @cache.cached(timeout=TREND_TIMEOUT)
-def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, existing_histograms, socket=data_socket):
+def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, socket=data_socket):
     # print(type(existing_data))
     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
         # print("updating traces...")
@@ -283,20 +282,62 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
             #print(data)
         except:
             print("Warning: Unable to get next traces")
-            return existing_data, existing_histograms, True
+            return existing_data, True
         # print(data)
         processed = [helpers.process_raw(orjson.loads(x)) for x in data]
         #print(processed[-1])
         print("displaying event: ", processed[-1]['event'])
         if( ctx.triggered_id == 'reset-histograms' ):
-            return processed[-1], helpers.create_histograms(processed),False # only add the latest traces to the data store
+            return processed[-1], False
         else:
-            return processed[-1], helpers.append_histograms(existing_histograms, processed),False # only add the latest traces to the data store
+            return processed[-1], False
             
     else:
         # return existing_data, helpers.append_histograms(existing_histograms, processed)
-        return existing_data, existing_histograms, False
+        return existing_data, False
     
+
+@callback( Output('histograms', 'data'),
+        Output('hist-update-failure-toast', 'is_open'),
+        Input('update-data', 'n_intervals'), 
+        Input('do-update', 'on'),
+        Input('do-update-now', 'n_clicks'), 
+        Input('reset-histograms', 'n_clicks'), 
+        # Input('traces', 'data'),
+        Input('histograms', 'data'),
+        # cache_args_to_ignore=[0,1,2,3,4,5],
+        # background=True,
+        # # manager=background_callback_manager,
+        # running=[
+        #     (Output("trace-update-toast", "is_open"), True, False),
+        # ],
+)
+# @cache.cached(timeout=TREND_TIMEOUT)
+def update_histograms(n, do_update, do_update_now, reset_histograms, existing_histograms, socket=data_socket):
+    # print(type(existing_data))
+    if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
+        # print("updating traces...")
+        # with helpers.time_section(tag='update_traces'):
+        try:
+            # data = helpers.read_from_socket(socket,message='TRACES')
+            # with helpers.time_section("cached_read_traces"):
+            data = ast.literal_eval(read_from_socket_cached(socket,message='HIST'))
+            #print(data)
+        except:
+            print("Warning: Unable to get next HISTOGRAMS")
+            return existing_histograms, True
+        
+        if( ctx.triggered_id == 'reset-histograms' ):
+            # histogram_snapshot = data.copy()
+            return data, False
+        else:
+            return data, False
+            
+    else:
+        # return existing_data, helpers.append_histograms(existing_histograms, processed)
+        return existing_histograms, False
+    
+
 # @callback(Output('trends', 'data'),
 #         Output('db-update-toast', 'is_open', allow_duplicate=True),
 #         Input('update-data', 'n_intervals'), 
