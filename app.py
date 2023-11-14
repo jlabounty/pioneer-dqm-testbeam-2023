@@ -213,6 +213,16 @@ app.layout = html.Div([
         style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
     ),
     dbc.Toast(
+        "Unable to read from ODB",
+        id="odb-update-toast",
+        header="Warning:",
+        is_open=False,
+        dismissable=True,
+        icon="danger",
+        # top: 66 positions the toast below the navbar
+        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
+    ),
+    dbc.Toast(
         "Unable to fetch new traces",
         id="trace-update-failure-toast",
         header="Error",
@@ -253,8 +263,8 @@ def update_run_tracker(data):
     ]
 
 
+# @cache.cached(timeout=TREND_TIMEOUT)
 @callback(Output('traces', 'data'),
-        # Output('histograms', 'data'),
         Output('trace-update-failure-toast', 'is_open'),
         Input('update-data', 'n_intervals'), 
         Input('do-update', 'on'),
@@ -269,7 +279,6 @@ def update_run_tracker(data):
         #     (Output("trace-update-toast", "is_open"), True, False),
         # ],
 )
-# @cache.cached(timeout=TREND_TIMEOUT)
 def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, socket=data_socket):
     # print(type(existing_data))
     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
@@ -364,7 +373,8 @@ def update_histograms(n, do_update, do_update_now, reset_histograms, existing_hi
 #         return existing_data
 
 @callback(Output('constants', 'data'),
-        Output('db-update-toast', 'is_open', allow_duplicate=True),
+        # Output('db-update-toast', 'is_open', allow_duplicate=True),
+        Output('odb-update-toast', 'is_open'),
         Input('update-constants', 'n_intervals'), 
         Input('do-update', 'on'),
         Input('constants', 'data'),
