@@ -114,7 +114,7 @@ def update_hodo(data):
     for i in range(data['n_hodo_y']):
         arri[i,:] += data['integrals_hodo_y']
     fig.add_trace(
-        px.imshow(arri[::-1,:]).data[0],
+        px.imshow(arri.T[::-1,:]).data[0],
         row = 2, col=2
     )
 
