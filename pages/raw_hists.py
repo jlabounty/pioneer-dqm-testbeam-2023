@@ -27,7 +27,8 @@ layout = html.Div(
 @callback(Output('histogram-store-dump', 'children'), Input('histograms', 'data'))
 def update_header(data):
     # print(json.dumps(data,indent=2))
+    # print('histogram data:', data)
     ding =  [html.H1('Current histogram values:') ]
-    ding.append(html.Pre([json.dumps(json.loads(data),indent=2)]))
+    ding.append(html.Pre([f'{data}']))
     
     return ding

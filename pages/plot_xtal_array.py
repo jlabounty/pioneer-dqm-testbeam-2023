@@ -61,7 +61,7 @@ def update_graph(data):
 
     for i in range(10):
         samples = list(range(len(data['traces_lyso'][i])))
-        fig.add_trace(go.Scatter(x=samples, y=data['traces_lyso'][i]), row=this_map[i][0],col=this_map[i][1] )
+        fig.add_trace(go.Scatter(x=samples, y=data['traces_lyso'][i], name=f'LYSO {i}'), row=this_map[i][0],col=this_map[i][1] )
     return fig
 
 

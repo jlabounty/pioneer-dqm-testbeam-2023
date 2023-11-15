@@ -180,7 +180,7 @@ app.layout = html.Div([
         ],
         # brand="PIONEER DQM",
         # brand_href="/",
-        color="primary",
+        color="primary" if not (os.uname()[1] == 'SB3') else "orange",
         dark=True,
         # style={'padding':10}
         # style={"margin-top": "15px"},
