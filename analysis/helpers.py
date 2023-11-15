@@ -110,7 +110,16 @@ def process_trends(data):
 
 
 def find_pedestal(trace, n=5):
-    return int(np.average(trace[:n]))
+    return int(
+        np.min(
+            [
+                np.average(trace[:n]),
+                np.average(trace[n:]),
+                np.average(trace[len(trace)//2-n:len(trace)//2]),
+            ]
+        )
+    )
+    # return int(np.average(trace[:n]))
 
 def get_integral(trace,ped=None):
     if ped is None:
