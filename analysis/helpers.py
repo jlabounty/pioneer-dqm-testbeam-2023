@@ -37,8 +37,8 @@ def read_from_socket(socket,message='TRACES'):
     '''
     context = zmq.Context()
 
-    # port = 5556
-    port = 5555 #REAL
+    port = 5556
+    # port = 5555 #REAL
     match message:
         case 'TRACES':
             socket = context.socket(zmq.SUB)
@@ -139,37 +139,48 @@ def create_histograms(processed):
     for name,hi in processed.items():
         # print('   ->', name)
         hists[name] = JsonToHist(hi).output
+    # print(np.sum(hists[name].values()))
+    hists['events'] = np.sum(hists[name].values())
+    # print(hists)
     return hists
-    # hists = {}
-    # for x in processed[0]:
-    #     if 'trace' in x:
-    #         hists[x] = {'integrals':[]}
-    #         for i,y in enumerate(processed[0][x]):
-    #             hists[x]['integrals'].append(hist.Hist(hist.axis.Regular(100,0,200000,label='Pulse Integral'), label=f'{x} | {i}'))
-    # return append_histograms(jsonpickle.encode(hists), processed)
 
 def append_histograms(existing_histograms, processed, reset=False):
     # fill existing histograms
-    return jsonpickle.encode(create_histograms(processed))
     if existing_histograms is None:
-        # print(processed)
-        pass
+        # print("No reference point")
+        return jsonpickle.encode( create_histograms(processed) )
     else:
-        hists = jsonpickle.decode(existing_histograms)
-    # print(type(hists))
-    if(reset):
-        hists['reference'] = jsonpickle.decode(existing_histograms).copy()
+        hists = create_histograms(processed)
+        previous = jsonpickle.decode(existing_histograms)
+        print(f"{hists.keys()=}")
+        print(f'{hists["reference"]=}')
+        print(f"{previous.keys()=}")
+        print(f"{previous['reference']=}")
 
-    for name,hi in hists.items():
-        print(name,hi)
-        if name == 'reference':
-            continue
-        # if hists['reference'] is None:
-        hists[name] = JsonToHist(processed[name]).output
-        # else:
-        #     hists[name] = JsonToHist(hi).output -  hists['reference'][name]
+        # hists['events'] = np.sum(hists['XY_hodoscope'].values())
+        print(hists['events'])
+        print(f"{hists['events']=}")
+        print(f"{hists['events']=},{previous['events']=}")
+        if hists['events'] < previous['events']:
+            reset = True
+        if(reset):
+            print("saving new reference point")
+            hists['reference'] = previous.copy()
+        else:
+            hists['reference'] = previous['reference']
+        print(f"{hists['reference']=}")
+        if(hists['reference'] is not None):
+            for name,hi in hists.items():
+                if name == 'reference':
+                    continue
+                # print( f'Reference hist:', [name] )
+                if 'XY_' in name:
+                    print('this histogram:', hi)
+                    print('reference histogram:',hists['reference'][name])
+                hists[name] = hi - hists['reference'][name]
+            
 
-    return jsonpickle.encode(hists)
+        return jsonpickle.encode(hists)
 
 
 

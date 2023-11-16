@@ -16,11 +16,16 @@ layout = html.Div([
     html.Div([
         dcc.Graph(id="t0-trace" , style={'display': 'inline-block'}),
         dcc.Graph(id="trace-array", style={'display': 'inline-block'}),
+        # dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
     ]),
     html.Div([
-        dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
+        # dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
+        dcc.Graph(id="hodo-hist" , style={'display': 'inline-block'}),
         dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
     ]),
+    html.Div([
+        dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
+    ])
 ])
 
 @callback(

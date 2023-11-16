@@ -115,7 +115,7 @@ app.layout = html.Div([
     dcc.Store(id='traces', storage_type='session'),
     dcc.Store(id='constants', storage_type='session'),
     # dcc.Store(id='trends', storage_type='session'),
-    dcc.Store(id='histograms', storage_type='session'),
+    dcc.Store(id='histograms'),#, storage_type='session'),
     dcc.Store(id='run-log', storage_type='session'),
     dcc.Store(id='nearline-files', storage_type='session'),
     dcc.Store(id='slow-control', storage_type='session'),
@@ -165,8 +165,8 @@ app.layout = html.Div([
         dbc.Container([
             dbc.Button('Update Traces', id='do-update-now', style={'display': 'inline-block'}, href='#', size="sm"),
             dbc.Button('Update Constants', id='update-constants-now', n_clicks=0, style={'display': 'inline-block'}, href='#', size="sm"),
-            # dbc.Button('', id='reset-histograms', style={'display': 'inline-block'}, href='#', size="sm", disabled=True),
-            html.Button('', id='reset-histograms', style={'display': 'inline-block'}, hidden=True),
+            dbc.Button('Reset Hists', id='reset-histograms', style={'display': 'inline-block'}, href='#', size="sm", disabled=False),
+            # html.Button('', id='reset-histograms', style={'display': 'inline-block'}, hidden=True),
             dbc.Button('Elog',href='https://maxwell.npl.washington.edu/elog/pienuxe/Run+2023/', target='_blank', id='elog_link', style={'display': 'inline-block'}, size="sm"),
             dbc.Button('Run Priorities',href='https://docs.google.com/spreadsheets/d/1gfpCICcEc2EJ55aq40GWMzIJlA6JtqRwJkGiXH2-Nsw/edit#gid=0', target='_blank', id='run_priority_link', style={'display': 'inline-block'}, size="sm"),
             dbc.DropdownMenu(
@@ -326,6 +326,7 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
 # @cache.cached(timeout=TREND_TIMEOUT)
 def update_histograms(n, do_update, do_update_now, reset_histograms, existing_histograms, socket=data_socket):
     # print(f'{type(existing_histograms)=}')
+    print("Update histograms triggered by", ctx.triggered_id )
     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
         # print("updating traces...")
         # with helpers.time_section(tag='update_traces'):
@@ -341,14 +342,15 @@ def update_histograms(n, do_update, do_update_now, reset_histograms, existing_hi
         except:
             print("Warning: Unable to get next HISTOGRAMS")
             return existing_histograms, True
-        ding = helpers.append_histograms(existing_histograms,data,reset=True)
+        # ding = helpers.append_histograms(existing_histograms,data,reset=False)
         # print(ding)
         
-        if( ctx.triggered_id == 'reset-histograms' ):
+        if( ctx.triggered_id == 'reset-histograms'):
             # histogram_snapshot = data.copy()
+            print('Setting new reference points based on ', ctx.triggered_id )
             return helpers.append_histograms(existing_histograms,data,reset=True), False
         else:
-            return helpers.append_histograms(existing_histograms,data), False
+            return helpers.append_histograms(existing_histograms,data,reset=False), False
             
     else:
         # return existing_data, helpers.append_histograms(existing_histograms, processed)
