@@ -303,6 +303,7 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
             
     else:
         # return existing_data, helpers.append_histograms(existing_histograms, processed)
+        raise ValueError
         return existing_data, False
     
 
