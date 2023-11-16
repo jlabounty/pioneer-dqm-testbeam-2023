@@ -261,20 +261,22 @@ def make_nearline_log_file_path(run,subrun):
 
 
 
-def hist_to_plotly_bar(h:hist.Hist,name=None):
+def hist_to_plotly_bar(h:hist.Hist,name=None,**kwargs):
     return go.Bar(
         x = h.axes[0].centers,
         y = h.values(),
-        name=name
+        name=name,
+        **kwargs
     )
 
 
-def hist_to_plotly_2d(h:hist.Hist,name=None):
+def hist_to_plotly_2d(h:hist.Hist,name=None,**kwargs):
     return go.Heatmap(
         x = h.axes[0].centers,
         y = h.axes[1].centers,
         z = h.values(),
-        name=name
+        name=name,
+        **kwargs
     )
 
 
@@ -301,6 +303,8 @@ class JsonToHist:
     def get_shaped_contents(self, bins):
         flat = self.h['fArray']
         ding = [b+2 for b in bins]
+        # if(len(ding) > 1):
+        #     print(f'reshaping for a {ding} array')
         return np.array(flat).reshape(*ding)
 
     def process_regular_axis(self, key):

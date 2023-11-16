@@ -7,6 +7,9 @@ import numpy as np
 from dash import Dash, html, dcc, Output, Input, State, callback
 from dash.exceptions import PreventUpdate
 import dash
+import hist
+import jsonpickle
+import analysis.helpers as helpers
 
 # app = Dash(__name__)
 dash.register_page(__name__)
@@ -16,6 +19,8 @@ layout = html.Div([
     html.Div([
         dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
         dcc.Graph(id="trace-array", style={'display': 'inline-block'}),
+        dcc.Graph(id="hodo-hist", style={'display': 'inline-block'}),
+        dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
     ]),
 ])
 
@@ -63,6 +68,7 @@ def update_graph(data):
         samples = list(range(len(data['traces_lyso'][i])))
         fig.add_trace(go.Scatter(x=samples, y=data['traces_lyso'][i], name=f'LYSO {i}'), row=this_map[i][0],col=this_map[i][1] )
     return fig
+
 
 
 @callback(
@@ -129,3 +135,77 @@ def update_hodo(data):
 
 
     return fig
+
+
+@callback(
+    Output("nai-array", "figure"), 
+    Input('traces', 'data')
+)
+def update_nai(data):
+    # return f'You have selected {value}'
+    # if value not in options:
+    #     return
+    fig = plotly.subplots.make_subplots(
+        rows=4, cols=1,
+        shared_xaxes='all',
+        shared_yaxes='all',
+        # print_grid=True,
+    )
+
+    for i, tracei in enumerate(data['traces_nai']):
+        samples = list(range(len(tracei)))
+        fig.add_trace(go.Scatter(x=samples, y=tracei, name=f'NaI {i}'), row=i+1, col=1 )
+    return fig
+
+
+@callback(
+    Output("hodo-hist", "figure"), 
+    Input('histograms', 'data')
+)
+def update_hodo_hist(data):
+    # return f'You have selected {value}'
+    # if value not in options:
+    #     return
+    fig = plotly.subplots.make_subplots(
+        rows=6, cols=6,
+        specs = [
+            [None, {'colspan': 5, 'rowspan':1}] + [None,]*4,
+            [{'colspan':1, 'rowspan':5}, {'colspan': 5, 'rowspan':5}] + [None,]*4,
+            [None,]*6,
+            [None,]*6,
+            [None,]*6,
+            [None,]*6,
+        ],
+        # shared_xaxes='all',
+        # shared_yaxes='all',
+        # print_grid=True,
+        vertical_spacing=0.075,
+        horizontal_spacing=0.08
+    )
+    hists = jsonpickle.decode(data)
+    hi = hists['XY_hodoscope']
+
+    fig.add_trace(
+        helpers.hist_to_plotly_bar(hi.project(0)),
+        row = 1, col=2
+    )
+
+    fig.add_trace(
+        helpers.hist_to_plotly_bar(
+            hi.project(1),
+            orientation='h',
+        ),
+        row = 2, col=1
+    )
+
+    fig.add_trace(
+        helpers.hist_to_plotly_2d(
+            # hc, 
+            hi,
+            name='XY Hodoscope',
+        ),
+        row=2,col=2,
+    )
+
+    return fig
+

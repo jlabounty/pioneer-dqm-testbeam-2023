@@ -3,6 +3,7 @@ import random
 import sys
 import time
 import json
+# import 
 
 port = "5556"
 if len(sys.argv) > 1:
@@ -20,6 +21,10 @@ with open(infile, 'r') as fin:
 infile = './last.json'
 with open(infile, 'r') as fin:
     odb = json.load(fin)
+
+infile = './daq_machine_test/hist.out'
+with open(infile, 'r') as fin:
+    hists = json.load(fin)
 
 counter = 0
 while True:
@@ -40,4 +45,13 @@ while True:
     #     continue
     print(counter, topic,len(message), message[:5])
     socket.send_multipart([topic, message.encode()])
-    time.sleep(.01)
+    time.sleep(.1)
+
+    topic = b'HIST'
+    message = f'{json.dumps(hists)}'
+
+    # if len(message) < 10:
+    #     continue
+    print(counter, topic,len(message), message[:5])
+    socket.send_multipart([topic, message.encode()])
+    time.sleep(.1)
