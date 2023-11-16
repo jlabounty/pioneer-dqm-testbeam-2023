@@ -71,7 +71,7 @@ def read_from_socket(socket,message='TRACES'):
             mout = mout.decode()
             break
         except:
-            print("failed on read", i, 'for', message)
+            # print("failed on read", i, 'for', message)
             time.sleep(.1)
     # mout = socket.recv(zmq.NOBLOCK).decode()
     # print(mout)
