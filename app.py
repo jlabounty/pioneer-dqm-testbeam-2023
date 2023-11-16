@@ -167,7 +167,7 @@ app.layout = html.Div([
             dbc.Button('Update Constants', id='update-constants-now', n_clicks=0, style={'display': 'inline-block'}, href='#', size="sm"),
             # dbc.Button('', id='reset-histograms', style={'display': 'inline-block'}, href='#', size="sm", disabled=True),
             html.Button('', id='reset-histograms', style={'display': 'inline-block'}, hidden=True),
-            dbc.Button('Elog',href='https://maxwell.npl.washington.edu/elog/pienuxe/R23/', target='_blank', id='elog_link', style={'display': 'inline-block'}, size="sm"),
+            dbc.Button('Elog',href='https://maxwell.npl.washington.edu/elog/pienuxe/Run+2023/', target='_blank', id='elog_link', style={'display': 'inline-block'}, size="sm"),
             dbc.Button('Run Priorities',href='https://docs.google.com/spreadsheets/d/1gfpCICcEc2EJ55aq40GWMzIJlA6JtqRwJkGiXH2-Nsw/edit#gid=0', target='_blank', id='run_priority_link', style={'display': 'inline-block'}, size="sm"),
             dbc.DropdownMenu(
                 [dbc.DropdownMenuItem(
@@ -333,6 +333,7 @@ def update_histograms(n, do_update, do_update_now, reset_histograms, existing_hi
         # print(type(data))
         try:  
             data = orjson.loads(ast.literal_eval(read_from_socket_cached(socket,message='HIST'))[0])
+            # print(data)
         #     # data = helpers.read_from_socket(socket,message='TRACES')
         #     # with helpers.time_section("cached_read_traces"):
         #     # data = ast.literal_eval(read_from_socket_cached(socket,message='HIST'))
