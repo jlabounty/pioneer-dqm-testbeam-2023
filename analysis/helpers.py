@@ -37,8 +37,8 @@ def read_from_socket(socket,message='TRACES'):
     '''
     context = zmq.Context()
 
-    port = 5556
-    # port = 5555 #REAL
+    # port = 5556
+    port = 5555 #REAL
     match message:
         case 'TRACES':
             socket = context.socket(zmq.SUB)
