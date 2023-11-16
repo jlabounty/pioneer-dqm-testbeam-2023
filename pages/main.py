@@ -19,11 +19,11 @@ layout = html.Div([
         # dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
     ]),
     html.Div([
-        # dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
-        dcc.Graph(id="hodo-hist" , style={'display': 'inline-block'}),
+        dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
         dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
     ]),
     html.Div([
+        dcc.Graph(id="hodo-hist" , style={'display': 'inline-block'}),
         dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
     ])
 ])
