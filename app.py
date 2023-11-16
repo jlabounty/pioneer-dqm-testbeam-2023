@@ -165,7 +165,8 @@ app.layout = html.Div([
         dbc.Container([
             dbc.Button('Update Traces', id='do-update-now', style={'display': 'inline-block'}, href='#', size="sm"),
             dbc.Button('Update Constants', id='update-constants-now', n_clicks=0, style={'display': 'inline-block'}, href='#', size="sm"),
-            dbc.Button('Reset Histograms + Trends', id='reset-histograms', style={'display': 'inline-block'}, href='#', size="sm"),
+            # dbc.Button('', id='reset-histograms', style={'display': 'inline-block'}, href='#', size="sm", disabled=True),
+            html.Button('', id='reset-histograms', style={'display': 'inline-block'}, hidden=True),
             dbc.Button('Elog',href='https://maxwell.npl.washington.edu/elog/pienuxe/R23/', target='_blank', id='elog_link', style={'display': 'inline-block'}, size="sm"),
             dbc.Button('Run Priorities',href='https://docs.google.com/spreadsheets/d/1gfpCICcEc2EJ55aq40GWMzIJlA6JtqRwJkGiXH2-Nsw/edit#gid=0', target='_blank', id='run_priority_link', style={'display': 'inline-block'}, size="sm"),
             dbc.DropdownMenu(
@@ -303,7 +304,7 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
             
     else:
         # return existing_data, helpers.append_histograms(existing_histograms, processed)
-        raise ValueError
+        # raise ValueError
         return existing_data, False
     
 
@@ -324,27 +325,33 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
 )
 # @cache.cached(timeout=TREND_TIMEOUT)
 def update_histograms(n, do_update, do_update_now, reset_histograms, existing_histograms, socket=data_socket):
-    # print(type(existing_data))
+    # print(f'{type(existing_histograms)=}')
     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
         # print("updating traces...")
         # with helpers.time_section(tag='update_traces'):
-        try:
-            # data = helpers.read_from_socket(socket,message='TRACES')
-            # with helpers.time_section("cached_read_traces"):
-            data = ast.literal_eval(read_from_socket_cached(socket,message='HIST'))
-            #print(data)
+        # print(data)
+        # print(type(data))
+        try:  
+            data = orjson.loads(ast.literal_eval(read_from_socket_cached(socket,message='HIST'))[0])
+        #     # data = helpers.read_from_socket(socket,message='TRACES')
+        #     # with helpers.time_section("cached_read_traces"):
+        #     # data = ast.literal_eval(read_from_socket_cached(socket,message='HIST'))
+        #     #print(data)
         except:
             print("Warning: Unable to get next HISTOGRAMS")
             return existing_histograms, True
+        ding = helpers.append_histograms(existing_histograms,data,reset=True)
+        # print(ding)
         
         if( ctx.triggered_id == 'reset-histograms' ):
             # histogram_snapshot = data.copy()
-            return data, False
+            return helpers.append_histograms(existing_histograms,data,reset=True), False
         else:
-            return data, False
+            return helpers.append_histograms(existing_histograms,data), False
             
     else:
         # return existing_data, helpers.append_histograms(existing_histograms, processed)
+        # raise ValueError
         return existing_histograms, False
     
 

@@ -39,30 +39,37 @@ def update_graph(data):
     ]
 
     hists = jsonpickle.decode(data)
-    # # print(hists)
+    # print(hists)
 
-    for category, hc in hists.items():
-        for subcategory, hi in hc.items():
-            print(category, subcategory)
-            fig = plotly.subplots.make_subplots(
-                rows=len(hi), cols=1,
-                shared_xaxes='all',
-                shared_yaxes='all',
-                subplot_titles=[hii.label for hii in hi],
-            )
-            for i, hii in enumerate(hi):
-                # print(category, subcategory, i, hii)
+    fig = plotly.subplots.make_subplots(
+        rows=len(hists.keys()), cols=1,
+        # shared_xaxes='all',
+        # shared_yaxes='all',
+        # subplot_titles=[hii.label for hii in hi],
+    )
+    for i,(category, hc) in enumerate(hists.items()):
+        if category == 'reference':
+            continue
+        match len(hc.axes):
+            case 1:
                 fig.add_trace(
-                    # go.Scatter(x=hii.axes[0].centers, y=hii.values()), 
-                    helpers.hist_to_plotly_bar(hii),
-                            #   title=f'X{i}',
-                            row=i+1,
-                            col=1 )
-            # fig.update_layout(autosize=True, height=2200, width=1200)
-            fig.update_layout(autosize=False,
-                # height=1600,
-            )
-            # return fig
-            output.append(html.Div([dcc.Graph(figure=fig)]))
+                    helpers.hist_to_plotly_bar(hc, name=category),
+                    #   title=f'X{i}',
+                    # name=category,
+                    row=i+1,
+                    col=1 
+                )
+            case 2:
+                fig.add_trace(
+                    helpers.hist_to_plotly_2d(hc, name=category),
+                    #   title=f'X{i}',
+                    # name=category,
+                    row=i+1,
+                    col=1 
+                )
+    fig.update_layout(autosize=True,
+        height=3800,
+    )
+    output.append(html.Div([dcc.Graph(figure=fig)]))
     # print(output)
     return output

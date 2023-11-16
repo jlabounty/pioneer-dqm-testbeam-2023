@@ -37,8 +37,8 @@ def read_from_socket(socket,message='TRACES'):
     '''
     context = zmq.Context()
 
-    port = 5555 #REAL
-    # port = 5556
+    port = 5556
+    # port = 5555 #REAL
     match message:
         case 'TRACES':
             socket = context.socket(zmq.SUB)
@@ -63,15 +63,16 @@ def read_from_socket(socket,message='TRACES'):
     # with time_section(f" read_from_socket | {message} "):
     print(f"executing new call with message '{message}'")
     # topic, mout = socket.recv_multipart(zmq.NOBLOCK)
+    mout = None
     for i in range(10):
         try:
             topic, mout = socket.recv_multipart(zmq.NOBLOCK)
             print('success on read', i, 'for', message)
+            mout = mout.decode()
             break
         except:
-            # print("failed on read", i, 'for', message)
+            print("failed on read", i, 'for', message)
             time.sleep(.1)
-    mout = mout.decode()
     # mout = socket.recv(zmq.NOBLOCK).decode()
     # print(mout)
     return mout
@@ -133,26 +134,41 @@ def get_highest_index(integrals, r1=0, r2=-1):
 
 def create_histograms(processed):
     # create histogram structure
-    hists = {}
-    for x in processed[0]:
-        if 'trace' in x:
-            hists[x] = {'integrals':[]}
-            for i,y in enumerate(processed[0][x]):
-                hists[x]['integrals'].append(hist.Hist(hist.axis.Regular(100,0,200000,label='Pulse Integral'), label=f'{x} | {i}'))
-    return append_histograms(jsonpickle.encode(hists), processed)
+    hists = {'reference':None}
+    # print(f'{processed=}')
+    for name,hi in processed.items():
+        print('   ->', name)
+        hists[name] = JsonToHist(hi).output
+    return hists
+    # hists = {}
+    # for x in processed[0]:
+    #     if 'trace' in x:
+    #         hists[x] = {'integrals':[]}
+    #         for i,y in enumerate(processed[0][x]):
+    #             hists[x]['integrals'].append(hist.Hist(hist.axis.Regular(100,0,200000,label='Pulse Integral'), label=f'{x} | {i}'))
+    # return append_histograms(jsonpickle.encode(hists), processed)
 
-def append_histograms(existing_histograms, processed):
+def append_histograms(existing_histograms, processed, reset=False):
     # fill existing histograms
+    return jsonpickle.encode(create_histograms(processed))
     if existing_histograms is None:
-        existing_histograms = create_histograms(processed)
-    # with time_section("append_histograms"):
-    hists = jsonpickle.decode(existing_histograms)
-    # print(f"Appending {len(processed)} items to existing histograms")
-    for data in processed:
-        for x, traces in data.items():
-            if('trace' in x):
-                for j,trace in enumerate(traces):
-                    hists[x]['integrals'][j].fill(data[x.replace("traces_",'integrals_')][j])
+        # print(processed)
+        pass
+    else:
+        hists = jsonpickle.decode(existing_histograms)
+    # print(type(hists))
+    if(reset):
+        hists['reference'] = jsonpickle.decode(existing_histograms).copy()
+
+    for name,hi in hists.items():
+        print(name,hi)
+        if name == 'reference':
+            continue
+        # if hists['reference'] is None:
+        hists[name] = JsonToHist(processed[name]).output
+        # else:
+        #     hists[name] = JsonToHist(hi).output -  hists['reference'][name]
+
     return jsonpickle.encode(hists)
 
 
@@ -245,8 +261,54 @@ def make_nearline_log_file_path(run,subrun):
 
 
 
-def hist_to_plotly_bar(h:hist.Hist):
+def hist_to_plotly_bar(h:hist.Hist,name=None):
     return go.Bar(
         x = h.axes[0].centers,
         y = h.values(),
+        name=name
     )
+
+
+def hist_to_plotly_2d(h:hist.Hist,name=None):
+    return go.Heatmap(
+        x = h.axes[0].centers,
+        y = h.axes[1].centers,
+        z = h.values(),
+        name=name
+    )
+
+
+class JsonToHist:
+    def __init__(self, h) -> None:
+        self.h = h
+        self.output = self.process()
+        # pass
+
+    def process(self):
+        htype = self.h['_typename']
+        naxes = int(htype.split("TH")[1][0])
+        axes_names = ['fXaxis', 'fYaxis', 'fZaxis']
+        # print(htype, naxes)
+        ding = [self.process_regular_axis(axes_names[i]) for i in range(naxes) ]
+        bins,axes = zip(*ding)
+        # print(bins, axes)
+        hout = hist.Hist(*axes)
+        vals = hout.values(flow=True)
+        these_values = self.get_shaped_contents(bins)
+        vals += these_values
+        return hout
+        
+    def get_shaped_contents(self, bins):
+        flat = self.h['fArray']
+        ding = [b+2 for b in bins]
+        return np.array(flat).reshape(*ding)
+
+    def process_regular_axis(self, key):
+        # print(self.h[key]['fNbins'],self.h[key]['fXmin'],self.h[key]['fXmax'])
+        # print(type(self.h[key]['fNbins']),type(self.h[key]['fXmin']),type(self.h[key]['fXmax']))
+        # print(key)
+        label = key if 'fTitle' not in self.h[key].keys() else self.h[key]['fTitle'] 
+        return self.h[key]['fNbins'], hist.axis.Regular(
+            self.h[key]['fNbins'],self.h[key]['fXmin'],self.h[key]['fXmax'],label=label
+        )
+    
