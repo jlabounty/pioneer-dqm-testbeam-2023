@@ -102,8 +102,8 @@ def process_raw(data):
                     output[intname][j] = 0.0
                 else:
                     ped = find_pedestal(tj)
-                    # output[x][j] = [tjj-ped for tjj in tj]
-                    output[x][j] = [tjj for tjj in tj]
+                    output[x][j] = [tjj-ped for tjj in tj]
+                    # output[x][j] = [tjj for tjj in tj]
                     output[intname][j] = get_integral(output[x][j], ped=ped)
     return output
 
