@@ -97,7 +97,8 @@ def update_graph(data, xlow, xhigh, ylow, yhigh, options):
     #     return
     fig = plotly.subplots.make_subplots(
         rows=6, cols=8,
-        # specs = [[{'colspan': 1},{'colspan': 1},{'colspan': 1},{'colspan': 1},{'colspan': 1},{'colspan': 1},{'colspan': 2, 'rowspan':2},None]]*3,
+        shared_xaxes='all',
+        shared_yaxes='all',
         specs=[
             [None,{'colspan': 2, 'rowspan':2},None, {'colspan': 2, 'rowspan':2},None,{'colspan': 2, 'rowspan':2}, None,None],
             [None,]*8,
@@ -105,11 +106,7 @@ def update_graph(data, xlow, xhigh, ylow, yhigh, options):
             [None,]*8,
             [None,{'colspan': 2, 'rowspan':2},None, {'colspan': 2, 'rowspan':2},None,{'colspan': 2, 'rowspan':2}, None,None],
             [None,]*8,
-            # [None,{'colspan': 2, 'rowspan':2},{'colspan': 2, 'rowspan':2},{'colspan': 2, 'rowspan':2}, None],
         ],
-        shared_xaxes='all',
-        shared_yaxes='all',
-        # print_grid=True,
         vertical_spacing=0.075,
         horizontal_spacing=0.08
     )
@@ -129,19 +126,30 @@ def update_graph(data, xlow, xhigh, ylow, yhigh, options):
 
     for i in range(10):
         samples = list(range(len(data['traces_lyso'][i])))
-        fig.add_trace(go.Scatter(x=samples, y=data['traces_lyso'][i], name=f'LYSO {i}'), row=this_map[i][0],col=this_map[i][1] )
+        fig.add_trace(
+            go.Scatter(
+                x=samples, 
+                y=data['traces_lyso'][i], 
+                name=f'LYSO {i}'
+            ), 
+            row=this_map[i][0],
+            col=this_map[i][1] 
+        )
 
     if( 1 not in options ):
         fig.update_xaxes(range=[xlow,xhigh])   
     else:
-        fig.update_xaxes(autorange=True)
-        # fig.update_layout(
-        #     shared_xaxes='all',
-        # )
+        # fig.update_xaxes(autorange=True)
+        fig.update_xaxes(matches='x1')
+        # pass
     if( 3 not in options ):
         fig.update_yaxes(range=[ylow,yhigh])
     else:
-        fig.update_yaxes(autorange=True)
+        fig.update_yaxes(matches='y1')
+        # fig.update_layout(
+        #     shared_yaxes='all',
+        # )
+        # pass
 
     return fig
 

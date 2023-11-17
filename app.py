@@ -305,7 +305,7 @@ app.layout = html.Div([
                             # labelPosition='bottom',
                             id='lyso-trace-y-limit-low',
                             type='number',
-                            value=0,
+                            value=-20,
                         ),
                     ]),
                     dbc.Col([
