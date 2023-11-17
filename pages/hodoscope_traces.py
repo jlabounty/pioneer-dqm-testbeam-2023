@@ -7,12 +7,39 @@ import numpy as np
 from dash import Dash, html, dcc, Output, Input, State, callback
 from dash.exceptions import PreventUpdate
 import dash
+import dash_daq as daq
+import dash_bootstrap_components as dbc
 
 # app = Dash(__name__)
 dash.register_page(__name__)
 
 layout = html.Div([
-    html.H4('Plot an array of traces'),
+    html.H4('Hodoscope Traces'),
+    html.Div([
+        dbc.Row([
+            dbc.Col([
+                dbc.Label("Y Low [ADC Units]"),
+                dbc.Input(
+                    # label='Y Low [ADC Units]',
+                    # labelPosition='bottom',
+                    id='hodo-traces-limit-low',
+                    type='number',
+                    value=-10,
+                ),
+            ]),
+            dbc.Col([
+                dbc.Label("Y High [ADC Units]"),
+                dbc.Input(
+                    # label='Y High [ADC Units]',
+                    # labelPosition='bottom',
+                    id='hodo-traces-limit-high',
+                    type='number',
+                    value=300,
+                ),
+            ]),
+
+        ])
+    ]),
     dcc.Graph(id="hodo-traces"),
     # html.Div([
     # ]),
@@ -20,9 +47,11 @@ layout = html.Div([
 
 @callback(
     Output("hodo-traces", "figure"), 
-    Input('traces', 'data')
+    Input('traces', 'data'),
+    Input('hodo-traces-limit-low', 'value'),
+    Input('hodo-traces-limit-high', 'value'),
 )
-def update_graph(data):
+def update_graph(data, low, high):
     # return f'You have selected {value}'
     # if value not in options:
     #     return
@@ -44,7 +73,11 @@ def update_graph(data):
 
     for i in range(data['n_hodo_x']):
         samples_x = list(range(len(data['traces_hodo_x'][i])))
-        fig.add_trace(go.Scatter(x=samples_x, y=data['traces_hodo_x'][i]), 
+        fig.add_trace(go.Scatter(
+            x=samples_x, 
+            y=data['traces_hodo_x'][i],
+            name = f'HODO X{i}'
+            ), 
                     #   title=f'X{i}',
                       col=i+1,
                       row=1 )
@@ -53,12 +86,14 @@ def update_graph(data):
         fig.add_trace(go.Scatter(
             x=samples_y, 
             y=data['traces_hodo_y'][i],
+            name = f'HODO Y{i}'
             ), 
             # label=f'Y{i}',
                 col=i+1,
                 row=2 )
     # fig.update_layout(autosize=True, height=2200, width=1200)
     fig.update_layout(autosize=True,
-        height=800,
+        height=700,
     )
+    fig.update_yaxes(range=[low,high])
     return fig
