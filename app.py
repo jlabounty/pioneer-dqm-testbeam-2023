@@ -169,7 +169,7 @@ app.layout = html.Div([
             dbc.Button("Open Plot Controls", id='open-display-options',size='sm', style={'display': 'inline-block'}),
             # html.Button('', id='reset-histograms', style={'display': 'inline-block'}, hidden=True),
             dbc.Button('Midas',href='http://localhost:8080', target='_blank', id='midas-button', style={'display': 'inline-block'}, size="sm"),
-            dbc.Button('Elog',href='https://maxwell.npl.washington.edu/elog/pienuxe/Run+2023/', target='_blank', id='elog_link', style={'display': 'inline-block'}, size="sm"),
+            dbc.Button('Elog',href='https://maxwell.npl.washington.edu/elog/pienuxe/R23/', target='_blank', id='elog_link', style={'display': 'inline-block'}, size="sm"),
             dbc.Button('Run Priorities',href='https://docs.google.com/spreadsheets/d/1gfpCICcEc2EJ55aq40GWMzIJlA6JtqRwJkGiXH2-Nsw/edit#gid=0', target='_blank', id='run_priority_link', style={'display': 'inline-block'}, size="sm"),
             dbc.DropdownMenu(
                 [dbc.DropdownMenuItem(
