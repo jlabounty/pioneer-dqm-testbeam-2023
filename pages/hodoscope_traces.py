@@ -15,45 +15,6 @@ dash.register_page(__name__)
 
 layout = html.Div([
     html.H4('Hodoscope Traces'),
-    html.Div([
-        dbc.Row([
-            dbc.Col([
-                dbc.Checklist(
-                    options=[
-                        # {"label": "Autoscale X", "value": 1},
-                        # {"label": "Log X", "value": 2},
-                        {"label": "Autoscale Y", "value": 3},
-                        # {"label": "Log Y", "value": 4},
-                    ],
-                    value=[],
-                    id="hodo-traces-options",
-                    # inline=True,
-                    switch=True,
-                ),
-            ]),
-            dbc.Col([
-                dbc.Label("Y Low [ADC Units]"),
-                dbc.Input(
-                    # label='Y Low [ADC Units]',
-                    # labelPosition='bottom',
-                    id='hodo-traces-limit-low',
-                    type='number',
-                    value=-10,
-                ),
-            ]),
-            dbc.Col([
-                dbc.Label("Y High [ADC Units]"),
-                dbc.Input(
-                    # label='Y High [ADC Units]',
-                    # labelPosition='bottom',
-                    id='hodo-traces-limit-high',
-                    type='number',
-                    value=300,
-                ),
-            ]),
-
-        ])
-    ]),
     dcc.Graph(id="hodo-traces"),
     # html.Div([
     # ]),
@@ -113,3 +74,4 @@ def update_graph(data, low, high, options):
     if( 3 not in options ):
         fig.update_yaxes(range=[low,high])
     return fig
+

@@ -1,6 +1,6 @@
 import dash
 from dash import Dash, html, dcc, ctx
-from dash import Dash, dcc, html, Input, Output, callback
+from dash import Dash, dcc, html, Input, Output, State, callback
 import plotly 
 import zmq
 import json
@@ -167,8 +167,10 @@ app.layout = html.Div([
             dbc.Button('Update Constants', id='update-constants-now', n_clicks=0, style={'display': 'inline-block'}, href='#', size="sm"),
             dbc.Button('Reset Hists', id='reset-histograms', style={'display': 'inline-block'}, href='#', size="sm", disabled=False),
             # html.Button('', id='reset-histograms', style={'display': 'inline-block'}, hidden=True),
+            dbc.Button("Open Plot Controls", id='open-display-options',size='sm', style={'display': 'inline-block'}),
             dbc.Button('Elog',href='https://maxwell.npl.washington.edu/elog/pienuxe/Run+2023/', target='_blank', id='elog_link', style={'display': 'inline-block'}, size="sm"),
             dbc.Button('Run Priorities',href='https://docs.google.com/spreadsheets/d/1gfpCICcEc2EJ55aq40GWMzIJlA6JtqRwJkGiXH2-Nsw/edit#gid=0', target='_blank', id='run_priority_link', style={'display': 'inline-block'}, size="sm"),
+            dbc.Button('Midas',href='http://localhost:8080', target='_blank', id='run_priority_link', style={'display': 'inline-block'}, size="sm"),
             dbc.DropdownMenu(
                 [dbc.DropdownMenuItem(
                 f"{page['name']}", href=page['relative_path']
@@ -186,76 +188,255 @@ app.layout = html.Div([
         # style={'padding':10}
         # style={"margin-top": "15px"},
     ),
-    # dcc.Slider(
-    #     id='update-rate',
-    #     min=1,
-    #     max=20,
-    #     step=1,
-    #     value=15,
-    # ),
-    dbc.Toast(
-        "Updating traces...",
-        id="trace-update-toast",
-        header="INFO:",
-        is_open=False,
-        dismissable=True,
-        icon="danger",
-        # top: 66 positions the toast below the navbar
-        # style={"position": "fixed", "top": 66, "right": 10, "width": 350, "z-index":9999},
-    ),
-    dbc.Toast(
-        "Unable to connect to psql database",
-        id="db-update-toast",
-        header="Warning:",
-        is_open=False,
-        dismissable=True,
-        icon="danger",
-        # top: 66 positions the toast below the navbar
-        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
-    ),
-    dbc.Toast(
-        "Unable to read from ODB",
-        id="odb-update-toast",
-        header="Warning:",
-        is_open=False,
-        dismissable=True,
-        icon="danger",
-        # top: 66 positions the toast below the navbar
-        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
-    ),
-    dbc.Toast(
-        "Unable to fetch new traces",
-        id="trace-update-failure-toast",
-        header="Error",
-        is_open=False,
-        dismissable=True,
-        icon="danger",
-        # top: 66 positions the toast below the navbar
-        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
-    ),
-    dbc.Toast(
-        "Unable to fetch new histograms",
-        id="hist-update-failure-toast",
-        header="Error",
-        is_open=False,
-        dismissable=True,
-        icon="danger",
-        # top: 66 positions the toast below the navbar
-        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
-    ),
-    dash.page_container,
+
     html.Div([
-        dbc.Checklist(
-            options=[
-                {"label": "Subtract Pedestal", "value": 1},
-            ],
-            value=[1],
-            id="trace-options",
-            switch=True,
+        dbc.Toast(
+            "Updating traces...",
+            id="trace-update-toast",
+            header="INFO:",
+            is_open=False,
+            dismissable=True,
+            icon="danger",
+            # top: 66 positions the toast below the navbar
+            # style={"position": "fixed", "top": 66, "right": 10, "width": 350, "z-index":9999},
+        ),
+        dbc.Toast(
+            "Unable to connect to psql database",
+            id="db-update-toast",
+            header="Warning:",
+            is_open=False,
+            dismissable=True,
+            icon="danger",
+            # top: 66 positions the toast below the navbar
+            style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
+        ),
+        dbc.Toast(
+            "Unable to read from ODB",
+            id="odb-update-toast",
+            header="Warning:",
+            is_open=False,
+            dismissable=True,
+            icon="danger",
+            # top: 66 positions the toast below the navbar
+            style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
+        ),
+        dbc.Toast(
+            "Unable to fetch new traces",
+            id="trace-update-failure-toast",
+            header="Error",
+            is_open=False,
+            dismissable=True,
+            icon="danger",
+            # top: 66 positions the toast below the navbar
+            style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
+        ),
+        dbc.Toast(
+            "Unable to fetch new histograms",
+            id="hist-update-failure-toast",
+            header="Error",
+            is_open=False,
+            dismissable=True,
+            icon="danger",
+            # top: 66 positions the toast below the navbar
+            style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
         ),
     ]),
 
+    dbc.Collapse([
+            html.Div([
+                dbc.Row([
+                    dbc.Col([dbc.Label("Trace Controls")]),
+                    dbc.Col([
+                        dbc.Checklist(
+                            options=[
+                                {"label": "Subtract Pedestal", "value": 1},
+                            ],
+                            value=[1],
+                            id="trace-options",
+                            switch=True,
+                        ),
+                    ])
+                ]),
+                html.Div([
+                    dbc.Row([
+                        dbc.Col([dbc.Label("LYSO Plot Controls")]),
+                        dbc.Col([
+                                dbc.Checklist(
+                                    options=[
+                                        {"label": "Autoscale X", "value": 1},
+                                        # {"label": "Log X", "value": 2},
+                                        {"label": "Autoscale Y", "value": 3},
+                                        # {"label": "Log Y", "value": 4},
+                                    ],
+                                    value=[1,3],
+                                    id="lyso-trace-options",
+                                    # inline=True,
+                                    switch=True,
+                                ),
+                        ]),
+                        dbc.Col([
+                            dbc.Label("X Low"),
+                            dbc.Input(
+                                # label='Y Low [ADC Units]',
+                                # labelPosition='bottom',
+                                id='lyso-trace-x-limit-low',
+                                type='number',
+                                value=0,
+                            ),
+                        ]),
+                        dbc.Col([
+                            dbc.Label("X High"),
+                            dbc.Input(
+                                # label='Y High [ADC Units]',
+                                # labelPosition='bottom',
+                                id='lyso-trace-x-limit-high',
+                                type='number',
+                                value=800,
+                            ),
+                        ]),
+                        dbc.Col([
+                            dbc.Label("Y Low"),
+                            dbc.Input(
+                                # label='Y Low [ADC Units]',
+                                # labelPosition='bottom',
+                                id='lyso-trace-y-limit-low',
+                                type='number',
+                                value=0,
+                            ),
+                        ]),
+                        dbc.Col([
+                            dbc.Label("Y High"),
+                            dbc.Input(
+                                # label='Y High [ADC Units]',
+                                # labelPosition='bottom',
+                                id='lyso-trace-y-limit-high',
+                                type='number',
+                                value=300,
+                            ),
+                        ]),
+                    ],
+                    style={"background":"lightblue"}
+                    )
+                ]),
+                html.Div([
+                    dbc.Row([
+                        dbc.Col([dbc.Label("Histogram Controls")]),
+                        dbc.Col([
+                                dbc.Checklist(
+                                    options=[
+                                        {"label": "Autoscale X", "value": 1},
+                                        {"label": "Log X", "value": 2},
+                                        {"label": "Autoscale Y", "value": 3},
+                                        {"label": "Log Y", "value": 4},
+                                    ],
+                                    value=[1,3],
+                                    id="single-hist-options",
+                                    # inline=True,
+                                    switch=True,
+                                ),
+                        ]),
+                        dbc.Col([
+                            dbc.Label("X Low"),
+                            dbc.Input(
+                                # label='Y Low [ADC Units]',
+                                # labelPosition='bottom',
+                                id='single-hist-x-limit-low',
+                                type='number',
+                                value=0,
+                            ),
+                        ]),
+                        dbc.Col([
+                            dbc.Label("X High"),
+                            dbc.Input(
+                                # label='Y High [ADC Units]',
+                                # labelPosition='bottom',
+                                id='single-hist-x-limit-high',
+                                type='number',
+                                value=100_000,
+                            ),
+                        ]),
+                        dbc.Col([
+                            dbc.Label("Y Low"),
+                            dbc.Input(
+                                # label='Y Low [ADC Units]',
+                                # labelPosition='bottom',
+                                id='single-hist-y-limit-low',
+                                type='number',
+                                value=0,
+                            ),
+                        ]),
+                        dbc.Col([
+                            dbc.Label("Y High"),
+                            dbc.Input(
+                                # label='Y High [ADC Units]',
+                                # labelPosition='bottom',
+                                id='single-hist-y-limit-high',
+                                type='number',
+                                value=300,
+                            ),
+                        ]),
+
+                    ], style={"background":"#fdaa48"})
+
+                ]),
+                html.Div([
+                    dbc.Row([
+                        dbc.Col([dbc.Label("Hodoscope Plot Controls")]),
+                        dbc.Col([
+                            dbc.Checklist(
+                                options=[
+                                    # {"label": "Autoscale X", "value": 1},
+                                    # {"label": "Log X", "value": 2},
+                                    {"label": "Autoscale Y", "value": 3},
+                                    # {"label": "Log Y", "value": 4},
+                                ],
+                                value=[],
+                                id="hodo-traces-options",
+                                # inline=True,
+                                switch=True,
+                            ),
+                        ]),
+                        dbc.Col([
+                            dbc.Label("Y Low [ADC Units]"),
+                            dbc.Input(
+                                # label='Y Low [ADC Units]',
+                                # labelPosition='bottom',
+                                id='hodo-traces-limit-low',
+                                type='number',
+                                value=-10,
+                            ),
+                        ]),
+                        dbc.Col([
+                            dbc.Label("Y High [ADC Units]"),
+                            dbc.Input(
+                                # label='Y High [ADC Units]',
+                                # labelPosition='bottom',
+                                id='hodo-traces-limit-high',
+                                type='number',
+                                value=300,
+                            ),
+                        ]),
+
+                    ],style={"background":"lightblue"})
+                ]),
+
+            ]),
+        ],
+        is_open=False,
+        id = 'display-options-collapse',
+    ),
+    dash.page_container,
 ])
+
+@callback(
+    Output("display-options-collapse", "is_open"),
+    [Input("open-display-options", "n_clicks")],
+    [State("display-options-collapse", "is_open")],
+)
+def toggle_collapse(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
 @callback(Output('update-data', 'interval'), Input('update-rate', 'value' ))
 def update_refresh_rate(rate):

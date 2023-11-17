@@ -17,20 +17,81 @@ dash.register_page(__name__)
 
 layout = html.Div([
     html.H4('Plot an array of traces'),
+    
     html.Div([
-        dcc.Graph(id="lyso-hist-array", style={'display': 'inline-block'}),
-        dcc.Graph(id="trace-array", style={'display': 'inline-block'}),
-        dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
-        dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
-        dcc.Graph(id="hodo-hist", style={'display': 'inline-block'}),
+        dbc.Row([
+            dbc.Col([dcc.Graph(id="lyso-hist-array", style={'display': 'inline-block'}),], width='auto'),
+            dbc.Col([dcc.Graph(id="trace-array", style={'display': 'inline-block'}),], width='auto'),
+
+        ]),
+        dbc.Row(
+            dbc.Col([dcc.Graph(id="lyso-trace-list-layout", style={'display': 'inline-block'}),], width='full')
+        ),
+        dbc.Row([
+            dbc.Col([dcc.Graph(id="nai-array", style={'display': 'inline-block'}),], width='auto'),
+            dbc.Col([dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),], width='auto'),
+            dbc.Col([dcc.Graph(id="hodo-hist", style={'display': 'inline-block'}),], width='auto'),
+        ]),
     ]),
 ])
 
 @callback(
-    Output("trace-array", "figure"), 
-    Input('traces', 'data')
+    Output("lyso-trace-list-layout", "figure"), 
+    Input('traces', 'data'),
+    Input('lyso-trace-x-limit-low', 'value'),
+    Input('lyso-trace-x-limit-high', 'value'),
+    Input('lyso-trace-y-limit-low', 'value'),
+    Input('lyso-trace-y-limit-high', 'value'),
+    Input('lyso-trace-options', 'value'),
 )
-def update_graph(data):
+def update_trace_list_layout(data, xlow, xhigh, ylow, yhigh, options):
+    fig = plotly.subplots.make_subplots(
+        cols=5, rows=2,
+        shared_xaxes='all',
+        shared_yaxes='all',
+    )
+
+    for i in range(data['n_lyso']):
+        samples_x = list(range(len(data['traces_lyso'][i])))
+        fig.add_trace(go.Scatter(
+            x=samples_x, 
+            y=data['traces_lyso'][i],
+            name = f'LYSO {i}'
+            ), 
+                    #   title=f'X{i}',
+            col=i % 5 + 1,
+            row=i//5 + 1 
+        )
+        # break
+
+
+    if( 1 not in options ):
+        fig.update_xaxes(range=[xlow,xhigh])   
+    else:
+        fig.update_xaxes(autorange=True)
+    if( 3 not in options ):
+        fig.update_yaxes(range=[ylow,yhigh])
+    else:
+        fig.update_yaxes(autorange=True)
+
+    fig.update_layout(
+        # autosize=True,
+        height=700, width=1800
+    )
+    return fig
+
+
+
+@callback(
+    Output("trace-array", "figure"), 
+    Input('traces', 'data'),
+    Input('lyso-trace-x-limit-low', 'value'),
+    Input('lyso-trace-x-limit-high', 'value'),
+    Input('lyso-trace-y-limit-low', 'value'),
+    Input('lyso-trace-y-limit-high', 'value'),
+    Input('lyso-trace-options', 'value'),
+)
+def update_graph(data, xlow, xhigh, ylow, yhigh, options):
     # return f'You have selected {value}'
     # if value not in options:
     #     return
@@ -69,6 +130,19 @@ def update_graph(data):
     for i in range(10):
         samples = list(range(len(data['traces_lyso'][i])))
         fig.add_trace(go.Scatter(x=samples, y=data['traces_lyso'][i], name=f'LYSO {i}'), row=this_map[i][0],col=this_map[i][1] )
+
+    if( 1 not in options ):
+        fig.update_xaxes(range=[xlow,xhigh])   
+    else:
+        fig.update_xaxes(autorange=True)
+        # fig.update_layout(
+        #     shared_xaxes='all',
+        # )
+    if( 3 not in options ):
+        fig.update_yaxes(range=[ylow,yhigh])
+    else:
+        fig.update_yaxes(autorange=True)
+
     return fig
 
 @callback(
