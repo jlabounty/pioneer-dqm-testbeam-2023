@@ -10,6 +10,7 @@ import dash
 import hist
 import jsonpickle
 import analysis.helpers as helpers
+import dash_bootstrap_components as dbc
 
 # app = Dash(__name__)
 dash.register_page(__name__)
@@ -17,10 +18,11 @@ dash.register_page(__name__)
 layout = html.Div([
     html.H4('Plot an array of traces'),
     html.Div([
-        dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
+        dcc.Graph(id="lyso-hist-array", style={'display': 'inline-block'}),
         dcc.Graph(id="trace-array", style={'display': 'inline-block'}),
-        dcc.Graph(id="hodo-hist", style={'display': 'inline-block'}),
         dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
+        dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
+        dcc.Graph(id="hodo-hist", style={'display': 'inline-block'}),
     ]),
 ])
 
@@ -67,6 +69,64 @@ def update_graph(data):
     for i in range(10):
         samples = list(range(len(data['traces_lyso'][i])))
         fig.add_trace(go.Scatter(x=samples, y=data['traces_lyso'][i], name=f'LYSO {i}'), row=this_map[i][0],col=this_map[i][1] )
+    return fig
+
+@callback(
+    Output("lyso-hist-array", "figure"), 
+    Input('histograms', 'data')
+)
+def update_lyso_hist_array(input):
+    # return f'You have selected {value}'
+    # if value not in options:
+    #     return
+    hists = jsonpickle.decode(input)
+    fig = plotly.subplots.make_subplots(
+        rows=6, cols=8,
+        # specs = [[{'colspan': 1},{'colspan': 1},{'colspan': 1},{'colspan': 1},{'colspan': 1},{'colspan': 1},{'colspan': 2, 'rowspan':2},None]]*3,
+        specs=[
+            [None,{'colspan': 2, 'rowspan':2},None, {'colspan': 2, 'rowspan':2},None,{'colspan': 2, 'rowspan':2}, None,None],
+            [None,]*8,
+            [{'colspan': 2, 'rowspan':2},None,{'colspan': 2, 'rowspan':2},None,{'colspan': 2, 'rowspan':2},None,{'colspan': 2, 'rowspan':2},None],
+            [None,]*8,
+            [None,{'colspan': 2, 'rowspan':2},None, {'colspan': 2, 'rowspan':2},None,{'colspan': 2, 'rowspan':2}, None,None],
+            [None,]*8,
+            # [None,{'colspan': 2, 'rowspan':2},{'colspan': 2, 'rowspan':2},{'colspan': 2, 'rowspan':2}, None],
+        ],
+        shared_xaxes='all',
+        shared_yaxes='all',
+        # print_grid=True,
+        vertical_spacing=0.075,
+        horizontal_spacing=0.08
+    )
+
+    this_map = {
+         0:[1,2],
+         1:[1,4],
+         2:[1,6],
+         3:[3,1],
+         4:[3,3],
+         5:[3,5],
+         6:[3,7],
+         7:[5,2],
+         8:[5,4],
+         9:[5,6],
+    }
+
+    for i in range(10):
+        # samples = list(range(len(data['traces_lyso'][i])))
+        # fig.add_trace(go.Scatter(x=samples, y=data['traces_lyso'][i], name=f'LYSO {i}'), row=this_map[i][0],col=this_map[i][1] )
+        fig.add_trace(
+            # go.Scatter(
+            #     x=samples, 
+            #     y=data['traces_lyso'][i], 
+            #     name=f'LYSO {i}'
+            # ), 
+            helpers.hist_to_plotly_bar(hists[f'lyso_{i}'],name=f'LYSO {i}'),
+            row=this_map[i][0],
+            col=this_map[i][1] 
+        )
+    fig.update_yaxes(type="log")
+    fig.update_xaxes(range=[0,100_000])
     return fig
 
 
@@ -123,6 +183,8 @@ def update_hodo(data):
         px.imshow(arri.T[::-1,:]).data[0],
         row = 2, col=2
     )
+    # print(f"{data['integrals_hodo_x']=}")
+    # print(f"{data['integrals_hodo_y']=}")
 
     # fig.add_trace(
     #     go.Scatter(

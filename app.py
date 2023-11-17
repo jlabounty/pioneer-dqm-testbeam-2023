@@ -243,7 +243,18 @@ app.layout = html.Div([
         # top: 66 positions the toast below the navbar
         style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
     ),
-    dash.page_container
+    dash.page_container,
+    html.Div([
+        dbc.Checklist(
+            options=[
+                {"label": "Subtract Pedestal", "value": 1},
+            ],
+            value=[1],
+            id="trace-options",
+            switch=True,
+        ),
+    ]),
+
 ])
 
 @callback(Output('update-data', 'interval'), Input('update-rate', 'value' ))
@@ -272,6 +283,7 @@ def update_run_tracker(data):
         Input('do-update-now', 'n_clicks'), 
         Input('reset-histograms', 'n_clicks'), 
         Input('traces', 'data'),
+        Input("trace-options",'value'),
         # Input('histograms', 'data'),
         # cache_args_to_ignore=[0,1,2,3,4,5],
         # background=True,
@@ -280,8 +292,9 @@ def update_run_tracker(data):
         #     (Output("trace-update-toast", "is_open"), True, False),
         # ],
 )
-def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, socket=data_socket):
+def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, trace_options, socket=data_socket):
     # print(type(existing_data))
+    print(f'{trace_options=}')
     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
         # print("updating traces...")
         # with helpers.time_section(tag='update_traces'):
@@ -294,7 +307,7 @@ def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, 
             print("Warning: Unable to get next traces")
             return existing_data, True
         # print(data)
-        processed = [helpers.process_raw(orjson.loads(x)) for x in data]
+        processed = [helpers.process_raw(orjson.loads(x), subtract_pedestals = 1 in trace_options ) for x in data]
         #print(processed[-1])
         print("displaying event: ", processed[-1]['event'])
         if( ctx.triggered_id == 'reset-histograms' ):

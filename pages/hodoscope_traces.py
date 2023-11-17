@@ -18,6 +18,20 @@ layout = html.Div([
     html.Div([
         dbc.Row([
             dbc.Col([
+                dbc.Checklist(
+                    options=[
+                        # {"label": "Autoscale X", "value": 1},
+                        # {"label": "Log X", "value": 2},
+                        {"label": "Autoscale Y", "value": 3},
+                        # {"label": "Log Y", "value": 4},
+                    ],
+                    value=[],
+                    id="hodo-traces-options",
+                    # inline=True,
+                    switch=True,
+                ),
+            ]),
+            dbc.Col([
                 dbc.Label("Y Low [ADC Units]"),
                 dbc.Input(
                     # label='Y Low [ADC Units]',
@@ -50,8 +64,9 @@ layout = html.Div([
     Input('traces', 'data'),
     Input('hodo-traces-limit-low', 'value'),
     Input('hodo-traces-limit-high', 'value'),
+    Input('hodo-traces-options', 'value'),
 )
-def update_graph(data, low, high):
+def update_graph(data, low, high, options):
     # return f'You have selected {value}'
     # if value not in options:
     #     return
@@ -95,5 +110,6 @@ def update_graph(data, low, high):
     fig.update_layout(autosize=True,
         height=700,
     )
-    fig.update_yaxes(range=[low,high])
+    if( 3 not in options ):
+        fig.update_yaxes(range=[low,high])
     return fig

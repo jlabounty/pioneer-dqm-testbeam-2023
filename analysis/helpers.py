@@ -78,7 +78,7 @@ def read_from_socket(socket,message='TRACES'):
     return mout
         
 
-def process_raw(data):
+def process_raw(data, subtract_pedestals=True):
     '''
         Takes the raw python dictionary and does the following:
             1) loads the latest calibration constants
@@ -102,9 +102,13 @@ def process_raw(data):
                     output[intname][j] = 0.0
                 else:
                     ped = find_pedestal(tj)
-                    output[x][j] = [tjj-ped for tjj in tj]
-                    # output[x][j] = [tjj for tjj in tj]
-                    output[intname][j] = get_integral(output[x][j], ped=ped)
+                    if(subtract_pedestals):
+                        output[x][j] = [tjj-ped for tjj in tj]
+                        output[intname][j] = get_integral(output[x][j])
+                    else:
+                        output[x][j] = tj
+                        output[intname][j] = get_integral(output[x][j], ped=ped)
+                    # print(x,j,ped, output[intname][j])
     return output
 
 def process_trends(data):
@@ -152,15 +156,15 @@ def append_histograms(existing_histograms, processed, reset=False):
     else:
         hists = create_histograms(processed)
         previous = jsonpickle.decode(existing_histograms)
-        print(f"{hists.keys()=}")
-        print(f'{hists["reference"]=}')
-        print(f"{previous.keys()=}")
-        print(f"{previous['reference']=}")
+        # print(f"{hists.keys()=}")
+        # print(f'{hists["reference"]=}')
+        # print(f"{previous.keys()=}")
+        # print(f"{previous['reference']=}")
 
         # hists['events'] = np.sum(hists['XY_hodoscope'].values())
-        print(hists['events'])
-        print(f"{hists['events']=}")
-        print(f"{hists['events']=},{previous['events']=}")
+        # print(hists['events'])
+        # print(f"{hists['events']=}")
+        # print(f"{hists['events']=},{previous['events']=}")
         if hists['events'] < previous['events']:
             reset = True
         if(reset):
@@ -168,15 +172,15 @@ def append_histograms(existing_histograms, processed, reset=False):
             hists['reference'] = previous.copy()
         else:
             hists['reference'] = previous['reference']
-        print(f"{hists['reference']=}")
+        # print(f"{hists['reference']=}")
         if(hists['reference'] is not None):
             for name,hi in hists.items():
                 if name == 'reference':
                     continue
                 # print( f'Reference hist:', [name] )
-                if 'XY_' in name:
-                    print('this histogram:', hi)
-                    print('reference histogram:',hists['reference'][name])
+                # if 'XY_' in name:
+                    # print('this histogram:', hi)
+                    # print('reference histogram:',hists['reference'][name])
                 hists[name] = hi - hists['reference'][name]
             
 
