@@ -37,8 +37,8 @@ def read_from_socket(socket,message='TRACES'):
     '''
     context = zmq.Context()
 
-    port = 5556
-    # port = 5555 #REAL
+    # port = 5556
+    port = 5555 #REAL
     match message:
         case 'TRACES':
             socket = context.socket(zmq.SUB)
@@ -104,12 +104,15 @@ def process_raw(data, subtract_pedestals=True):
                     output[this_integral_key] = [None for _ in range(30)]
                 tj = wi['trace']
                 index = wi['channel_id']
-                output[this_waveform_key][index] = tj      
+                # output[this_waveform_key][index] = tj      
                 ped = find_pedestal(tj)
+                # print(f"found pedestal:", ped)
                 if(subtract_pedestals):
+                    # print('subtracting pedestals')
                     output[this_waveform_key][index] = [tjj-ped for tjj in tj]
                     output[this_integral_key][index] = get_integral(tj)
                 else:
+                    # print('eoinerivneroivneoivn****************************')
                     output[this_waveform_key][index] = tj
                     output[this_integral_key][index] = get_integral(tj, ped=ped)
         else:
@@ -129,6 +132,7 @@ def process_trends(data):
 
 
 def find_pedestal(trace, n=5):
+    # print('finding pedestal')
     return int(
         np.min(
             [
