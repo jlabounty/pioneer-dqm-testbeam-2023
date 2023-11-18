@@ -257,9 +257,10 @@ def update_hodo(data):
     )
 
     arri = np.zeros((data['n_hodo_x'], data['n_hodo_y']), dtype=int)
-    for i in range(data['n_hodo_x']):
-        arri[:,i] += data['integrals_hodo_x']
+    print(f'{arri.shape=}, {len(data["integrals_hodo_x"])=}, {len(data["integrals_hodo_y"])=}')
     for i in range(data['n_hodo_y']):
+        arri[:,i] += data['integrals_hodo_x']
+    for i in range(data['n_hodo_x']):
         arri[i,:] += data['integrals_hodo_y']
     fig.add_trace(
         px.imshow(arri.T[::-1,:]).data[0],

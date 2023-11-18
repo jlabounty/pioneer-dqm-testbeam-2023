@@ -93,7 +93,7 @@ def process_raw(data, subtract_pedestals=True):
     output = {}
     keys = list(data.keys())
     for i,x in enumerate(keys):
-        print(i, x)
+        # print(i, x)
         if('waveforms' in x):
             for wi in data[x]:
                 # print('    ->', wi['channel_type'], wi['channel_id'])
@@ -121,10 +121,15 @@ def process_raw(data, subtract_pedestals=True):
         # 
         # j,ped, output[intname][j])
     for name,xi in output.items():
-        # print()
+        # print(name)
         if type(xi) in [list,]:
             output[name] = remove_nones(xi)
-
+    for name in list(output.keys()):
+        if 'traces' in name:
+            # print("calculating len", name)
+            # print(len(output[name]))
+            output[name.replace("traces_", 'n_')] = len(output[name])
+    # print(output.keys())
     return output
 
 def process_trends(data):
