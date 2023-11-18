@@ -120,10 +120,31 @@ def process_raw(data, subtract_pedestals=True):
         # if 'traces' 
         # 
         # j,ped, output[intname][j])
+
+    # print(output.keys())
+    # print(output['traces_t0'])
     for name,xi in output.items():
         # print(name)
         if type(xi) in [list,]:
             output[name] = remove_nones(xi)
+
+    
+    # hack to handle the t0/rf overlap
+    output['t0_traces_orig'] = output['traces_t0']
+    output['t0_integrals_orig'] = output['integrals_t0']
+
+    output['traces_t0'] = output['t0_traces_orig'][:2]
+    output['integrals_t0'] = output['t0_integrals_orig'][:2]
+
+    output['traces_rf'] = output['t0_traces_orig'][2:3]
+    output['integrals_rf'] = output['t0_integrals_orig'][2:3]
+
+    output['traces_monitor'] = output['t0_traces_orig'][4:]
+    output['integrals_monitor'] = output['t0_integrals_orig'][4:]
+    # print(output.keys())
+    # print(len(output['traces_t0']))
+    # print(output['integrals_t0'])
+
     for name in list(output.keys()):
         if 'traces' in name:
             # print("calculating len", name)
