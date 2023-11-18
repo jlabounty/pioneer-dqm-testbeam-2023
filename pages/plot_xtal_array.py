@@ -329,6 +329,7 @@ def update_hodo_hist(data):
     )
     hists = jsonpickle.decode(data)
     hi = hists['XY_hodoscope']
+    # print(hi./values())
 
     fig.add_trace(
         helpers.hist_to_plotly_bar(hi.project(0)),

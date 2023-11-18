@@ -298,20 +298,30 @@ def make_nearline_log_file_path(run,subrun):
 
 
 
-def hist_to_plotly_bar(h:hist.Hist,name=None,**kwargs):
-    return go.Bar(
-        x = h.axes[0].centers,
-        y = h.values(),
-        name=name,
-        **kwargs
-    )
+def hist_to_plotly_bar(h:hist.Hist,orientation=0,name=None,**kwargs):
+    match orientation:
+        case 0 | 'v':   
+            return go.Bar(
+                x = h.axes[0].centers,
+                y = h.values(),
+                name=name,
+                **kwargs
+            )
+        case 1 | 'h':
+            return go.Bar(
+                y = h.axes[0].centers,
+                x = h.values(),
+                orientation='h',
+                name=name,
+                **kwargs
+            )
 
 
 def hist_to_plotly_2d(h:hist.Hist,name=None,**kwargs):
     return go.Heatmap(
         x = h.axes[0].centers,
         y = h.axes[1].centers,
-        z = h.values(),
+        z = h.values().T,
         name=name,
         **kwargs
     )
