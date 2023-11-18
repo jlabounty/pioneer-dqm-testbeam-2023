@@ -14,9 +14,12 @@ context = zmq.Context()
 socket = context.socket(zmq.PUB)
 socket.bind("tcp://*:%s" % port)
 
-infile = './traces_20.out'
+# infile = './traces_20.out'
+infile = './example_message.txt'
+# infile = './traces_sean.out'
 with open(infile, 'r') as fin:
     data = fin.readlines()
+# print(data)
 
 infile = './last.json'
 with open(infile, 'r') as fin:
@@ -30,7 +33,7 @@ counter = 0
 while True:
     counter += 1
     topic = b'DATA'
-    message = data[counter % len(data)]
+    message = f'{[data[counter % len(data)],]*5}'
     message = message.replace('"event":', f'"event":{counter}, "event_raw":')
     if len(message) < 10:
         continue

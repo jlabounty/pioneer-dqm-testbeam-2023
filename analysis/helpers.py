@@ -37,8 +37,8 @@ def read_from_socket(socket,message='TRACES'):
     '''
     context = zmq.Context()
 
-    # port = 5556
-    port = 5555 #REAL
+    port = 5556
+    # port = 5555 #REAL
     match message:
         case 'TRACES':
             socket = context.socket(zmq.SUB)
@@ -77,6 +77,8 @@ def read_from_socket(socket,message='TRACES'):
     # print(mout)
     return mout
         
+def remove_nones(li):
+    return [x for x in li if x is not None]
 
 def process_raw(data, subtract_pedestals=True):
     '''
@@ -88,27 +90,38 @@ def process_raw(data, subtract_pedestals=True):
     '''
     # print("processing data")
     # output = data.copy()
-    output = data
+    output = {}
     keys = list(data.keys())
     for i,x in enumerate(keys):
-        if 'traces' in x:
-            intname = x.replace("traces_",'integrals_')
-            output[intname] = [0 for _ in data[x]]
-            # print('   -> processing traces:', x)
-            for j, tj in enumerate(data[x]):
-                # print(j, tj)
-                if(len(tj) < 1):
-                    output[x][j] = [0.0 for _ in range(10)]
-                    output[intname][j] = 0.0
+        print(i, x)
+        if('waveforms' in x):
+            for wi in data[x]:
+                # print('    ->', wi['channel_type'], wi['channel_id'])
+                this_waveform_key = f'traces_{wi["channel_type"]}'
+                this_integral_key = f'integrals_{wi["channel_type"]}'
+                if( this_waveform_key not in output ):
+                    output[this_waveform_key] = [None for _ in range(30)]
+                    output[this_integral_key] = [None for _ in range(30)]
+                tj = wi['trace']
+                index = wi['channel_id']
+                output[this_waveform_key][index] = tj      
+                ped = find_pedestal(tj)
+                if(subtract_pedestals):
+                    output[this_waveform_key][index] = [tjj-ped for tjj in tj]
+                    output[this_integral_key][index] = get_integral(tj)
                 else:
-                    ped = find_pedestal(tj)
-                    if(subtract_pedestals):
-                        output[x][j] = [tjj-ped for tjj in tj]
-                        output[intname][j] = get_integral(output[x][j])
-                    else:
-                        output[x][j] = tj
-                        output[intname][j] = get_integral(output[x][j], ped=ped)
-                    # print(x,j,ped, output[intname][j])
+                    output[this_waveform_key][index] = tj
+                    output[this_integral_key][index] = get_integral(tj, ped=ped)
+        else:
+            output[x] = data[x]
+        # if 'traces' 
+        # 
+        # j,ped, output[intname][j])
+    for name,xi in output.items():
+        # print()
+        if type(xi) in [list,]:
+            output[name] = remove_nones(xi)
+
     return output
 
 def process_trends(data):
