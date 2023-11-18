@@ -7,24 +7,38 @@ import numpy as np
 from dash import Dash, html, dcc, Output, Input, State, callback
 from dash.exceptions import PreventUpdate
 import dash
+import dash_bootstrap_components as dbc
 
 # app = Dash(__name__)
 dash.register_page(__name__, path='/')
 
 layout = html.Div([
     # html.H4('Plot an array of traces'),
-    html.Div([
-        dcc.Graph(id="t0-trace" , style={'display': 'inline-block'}),
-        dcc.Graph(id="trace-array", style={'display': 'inline-block'}),
-        # dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
+    dbc.Row([
+        dbc.Col([
+            dcc.Graph(id="t0-trace" , style={'display': 'inline-block'}),
+            # dcc.Graph(id="rf-trace" , style={'display': 'inline-block'})
+        ],width='auto'),
+        dbc.Col([
+            dcc.Graph(id="trace-array", style={'display': 'inline-block'}),
+        ],width='auto')
     ]),
-    html.Div([
-        dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
-        dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
+    # dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
+    dbc.Row([
+        dbc.Col([
+            dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
+        ], width='auto'),
+        dbc.Col([
+            dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
+        ], width='auto'),
     ]),
-    html.Div([
-        dcc.Graph(id="hodo-hist" , style={'display': 'inline-block'}),
-        dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
+    dbc.Row([
+        dbc.Col([
+            dcc.Graph(id="hodo-hist" , style={'display': 'inline-block'}),
+        ], width='auto'),
+        dbc.Col([
+            dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
+        ], width='auto'),
     ])
 ])
 
@@ -40,7 +54,8 @@ def update_hodo_bar(data):
     fig.add_trace(
         go.Bar({
             'x':list(range(data['n_hodo_x'])),
-            'y':data['integrals_hodo_x']
+            'y':data['integrals_hodo_x'],
+            'name':"HODO X"
         }),
         row = 1, col=1
     )
@@ -48,7 +63,8 @@ def update_hodo_bar(data):
     fig.add_trace(
         go.Bar({
             'x':list(range(data['n_hodo_y'])),
-            'y':data['integrals_hodo_y']
+            'y':data['integrals_hodo_y'],
+            'name':"HODO Y"
             },
             # orientation='h'
         ),
@@ -63,6 +79,7 @@ def update_hodo_bar(data):
 )
 def update_t0_trace(data):
     fig = plotly.subplots.make_subplots()
+    names = ['T0', 'VETO', 'RF', 'MON1', 'MON2']
     for i,t0_trace in enumerate(data['traces_t0']):
         samples = list(range(len(t0_trace)))
         fig.add_trace(
@@ -70,7 +87,9 @@ def update_t0_trace(data):
                 x=samples,
                 y=t0_trace,
                 # label=f'T0 {i}'
+                name = names[i]
                 # orientation='h'
             ),
         )
     return fig
+
