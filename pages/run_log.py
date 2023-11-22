@@ -24,6 +24,7 @@ import dash_bootstrap_components as dbc
 
 layout = html.Div([
     html.H4('Run Log:'),
+    html.P('(Hover to see full text)'),
     dbc.Container([
         html.Button("Download Runlog", id="btn_csv"),
         dcc.Download(id="download-runlog-csv"),
