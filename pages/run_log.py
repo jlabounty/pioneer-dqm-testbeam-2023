@@ -62,15 +62,17 @@ layout = html.Div([
 @callback(
     Output("runlog-table", 'data'),
     Output("runlog-table", 'columns'),
+    Output("runlog-table", 'tooltip_data'),
     # Output("run-log", 'data'),
     Input('update-constants', 'n_intervals'), 
     Input('do-update', 'on'),
     Input('update-constants-now', 'n_clicks'),
     Input("runlog-table", 'data'),
     Input("runlog-table", 'columns'),
+    Input("runlog-table", 'tooltip_data'),
     Input("run-log", 'data'),
 )
-def fill_columns(update_constants, do_update, update_constants_now, existing_data, existing_columns, run_log_data):
+def fill_columns(update_constants, do_update, update_constants_now, existing_data, existing_columns, existing_tooltips, run_log_data):
     # with helpers.time_section("fill-datatable"):
     # print(f'{existing_data=}')
     if(run_log_data is not None):
@@ -82,12 +84,23 @@ def fill_columns(update_constants, do_update, update_constants_now, existing_dat
         return existing_data, existing_columns
     df['id'] = df.index.astype(int)
     if(do_update or ctx.triggered_id == 'update-constants-now'):
-        return (df.to_dict('records'), 
-            [{"name": i, "id": i, "hideable": True, 'selectable':True} for i in df.columns if i != 'id'],
+
+        records = df.to_dict("records")
+        columns = [{"name": i, "id": i, "hideable": True, 'selectable':True} for i in df.columns if i != 'id']
+        tooltips = [
+            {
+                column: {'value': str(value), 'type': 'markdown'}
+                for column, value in row.items()
+            } for row in records
+        ]
+
+        return (records,
+            columns,
+            tooltips
             # df.to_dict('records'))
         )
     else:
-        return existing_data, existing_columns
+        return existing_data, existing_columns, existing_tooltips
 
 # @callback(
 #     Output('runlog_table_out', 'children'), 
