@@ -288,14 +288,14 @@ def create_updated_runlog(
     db_connection,
 ):
     '''reads in the online database filled by midas and udpates the internal nearline run log'''
-    df = read_from_db('select * from online order by run_number desc;', db_connection)
+    df = read_from_db('select * from online order by run_number desc limit 4000;', db_connection)
 
     return df
 
 def create_updated_subrun_list(
     db_connection,
 ):
-    df = read_from_db('select * from nearline_processing order by (run_number, subrun_number) desc;', db_connection)
+    df = read_from_db('select * from nearline_processing order by (run_number, subrun_number) desc limit 1000;', db_connection)
     return df
 
 def create_updated_slow_control(
