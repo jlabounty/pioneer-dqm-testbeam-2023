@@ -26,18 +26,18 @@ layout = html.Div([
     # dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
     dbc.Row([
         dbc.Col([
-            dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
-        ], width='auto'),
-        dbc.Col([
-            dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
-        ], width='auto'),
-    ]),
-    dbc.Row([
-        dbc.Col([
             dcc.Graph(id="hodo-hist" , style={'display': 'inline-block'}),
         ], width='auto'),
         dbc.Col([
             dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
+        ], width='auto'),
+    ]),
+    dbc.Row([
+        dbc.Col([
+            dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
+        ], width='auto'),
+        dbc.Col([
+            dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
         ], width='auto'),
     ]),
     dbc.Row([
@@ -47,7 +47,7 @@ layout = html.Div([
         dbc.Col([
             dcc.Graph(id="led-monitor-trace", style={'display': 'inline-block'}),
         ], width='auto'),
-    ])
+    ]),
 ])
 
 @callback(

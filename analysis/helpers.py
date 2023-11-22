@@ -96,7 +96,8 @@ def process_raw(data, subtract_pedestals=True):
         # print(i, x)
         if('waveforms' in x):
             for wi in data[x]:
-                # print('    ->', wi['channel_type'], wi['channel_id'])
+                # print(wi.keys())
+                # print('    ->', wi['channel_type'], wi['channel_id'], wi['amcSlotNum'], wi['channel'])
                 this_waveform_key = f'traces_{wi["channel_type"]}'
                 this_integral_key = f'integrals_{wi["channel_type"]}'
                 if( this_waveform_key not in output ):
@@ -199,6 +200,12 @@ def append_histograms(existing_histograms, processed, reset=False):
     else:
         hists = create_histograms(processed)
         previous = jsonpickle.decode(existing_histograms)
+
+        ref_key = 'XY_hodoscope'
+        fewer_fills = False
+        if ref_key in hists.keys() and ref_key in previous.keys():
+            fewer_fills = ( np.nansum(hists[ref_key].values()) < np.nansum(previous[ref_key].values()) )
+            # print(f'{fewer_fills=}, {hists["events"]=}, {previous["events"]=}')
         # print(f"{hists.keys()=}")
         # print(f'{hists["reference"]=}')
         # print(f"{previous.keys()=}")
@@ -208,11 +215,11 @@ def append_histograms(existing_histograms, processed, reset=False):
         # print(hists['events'])
         # print(f"{hists['events']=}")
         # print(f"{hists['events']=},{previous['events']=}")
-        if hists['events'] < previous['events']:
+        if hists['events'] < previous['events'] or fewer_fills:
             reset = True
         if(reset):
             print("saving new reference point")
-            hists['reference'] = previous.copy()
+            hists['reference'] = hists.copy()
         else:
             hists['reference'] = previous['reference']
         # print(f"{hists['reference']=}")
@@ -323,14 +330,14 @@ def hist_to_plotly_bar(h:hist.Hist,orientation=0,name=None,**kwargs):
     match orientation:
         case 0 | 'v':   
             return go.Bar(
-                x = h.axes[0].centers,
+                x = h.axes[0].centers[::-1],
                 y = h.values(),
                 name=name,
                 **kwargs
             )
         case 1 | 'h':
             return go.Bar(
-                y = h.axes[0].centers,
+                y = h.axes[0].centers[::-1],
                 x = h.values(),
                 orientation='h',
                 name=name,
@@ -342,7 +349,7 @@ def hist_to_plotly_2d(h:hist.Hist,name=None,**kwargs):
     return go.Heatmap(
         x = h.axes[0].centers,
         y = h.axes[1].centers,
-        z = h.values().T,
+        z = h.values(),
         name=name,
         **kwargs
     )
