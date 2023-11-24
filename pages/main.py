@@ -26,7 +26,7 @@ layout = html.Div([
     # dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
     dbc.Row([
         dbc.Col([
-            dcc.Graph(id="hodo-hist" , style={'display': 'inline-block'}),
+            dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
         ], width='auto'),
         dbc.Col([
             dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
@@ -34,10 +34,15 @@ layout = html.Div([
     ]),
     dbc.Row([
         dbc.Col([
-            dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
+            dcc.Graph(id="hodo-traces"),
+        ], width='full'),
+    ]),
+    dbc.Row([
+        dbc.Col([
+            dcc.Graph(id="hodo-hist" , style={'display': 'inline-block'}),
         ], width='auto'),
         dbc.Col([
-            dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
+            dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
         ], width='auto'),
     ]),
     dbc.Row([
@@ -53,9 +58,12 @@ layout = html.Div([
 @callback(
     Output("hodo-bar", "figure"), 
     # Output("hodo-y-bar", "figure"), 
-    Input('traces', 'data')
+    Input('traces', 'data'),
+    Input('hodo-bar-limit-low', 'value'),
+    Input('hodo-bar-limit-high', 'value'),
+    Input('hodo-bar-options', 'value'),
 )
-def update_hodo_bar(data):
+def update_hodo_bar(data, ylow, yhigh, options):
     fig = plotly.subplots.make_subplots(rows=2,cols=1)
     # fig2 = plotly.subplots.make_subplots()
 
@@ -78,6 +86,10 @@ def update_hodo_bar(data):
         ),
         row = 2, col=1
     )
+
+    
+    if( 3 not in options ):
+        fig.update_yaxes(range=[ylow,yhigh])
 
     return fig
 

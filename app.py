@@ -423,6 +423,46 @@ app.layout = html.Div([
 
                 ],style={"background":"lightblue"})
             ]),
+            html.Div([
+                dbc.Row([
+                    dbc.Col([dbc.Label("Hodoscope Integral Histogram Controls")]),
+                    dbc.Col([
+                        dbc.Checklist(
+                            options=[
+                                # {"label": "Autoscale X", "value": 1},
+                                # {"label": "Log X", "value": 2},
+                                {"label": "Autoscale Y", "value": 3},
+                                # {"label": "Log Y", "value": 4},
+                            ],
+                            value=[],
+                            id="hodo-bar-options",
+                            # inline=True,
+                            switch=True,
+                        ),
+                    ]),
+                    dbc.Col([
+                        dbc.Label("Y Low [ADC Units]"),
+                        dbc.Input(
+                            # label='Y Low [ADC Units]',
+                            # labelPosition='bottom',
+                            id='hodo-bar-limit-low',
+                            type='number',
+                            value=-10,
+                        ),
+                    ]),
+                    dbc.Col([
+                        dbc.Label("Y High [ADC Units]"),
+                        dbc.Input(
+                            # label='Y High [ADC Units]',
+                            # labelPosition='bottom',
+                            id='hodo-bar-limit-high',
+                            type='number',
+                            value=300,
+                        ),
+                    ]),
+
+                ],style={"background":"lightblue"})
+            ]),
 
         ])
         ],
@@ -491,7 +531,7 @@ def update_run_tracker(data):
 )
 def update_traces(n, do_update, do_update_now, reset_histograms, existing_data, trace_options, socket=data_socket):
     # print(type(existing_data))
-    print(f'{trace_options=}')
+    # print(f'{trace_options=}')
     if(do_update or ctx.triggered_id in ['do-update-now', 'reset-histograms']):
         # print("updating traces...")
         # with helpers.time_section(tag='update_traces'):
