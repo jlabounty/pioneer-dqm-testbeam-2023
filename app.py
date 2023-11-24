@@ -407,7 +407,7 @@ app.layout = html.Div([
                             # labelPosition='bottom',
                             id='hodo-traces-limit-low',
                             type='number',
-                            value=-10,
+                            value=-100,
                         ),
                     ]),
                     dbc.Col([
@@ -417,7 +417,7 @@ app.layout = html.Div([
                             # labelPosition='bottom',
                             id='hodo-traces-limit-high',
                             type='number',
-                            value=300,
+                            value=8000,
                         ),
                     ]),
 
