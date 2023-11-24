@@ -214,7 +214,7 @@ app.layout = html.Div([
         dismissable=True,
         icon="danger",
         # top: 66 positions the toast below the navbar
-        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
+        style={"position": "fixed", "top": 10, "left": 10, "width": 200, "z-index":9999},
     ),
     dbc.Toast(
         "Unable to read from ODB",
@@ -224,7 +224,7 @@ app.layout = html.Div([
         dismissable=True,
         icon="danger",
         # top: 66 positions the toast below the navbar
-        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
+        style={"position": "fixed", "top": 10, "left": 10, "width": 200, "z-index":9999},
     ),
     dbc.Toast(
         "Unable to fetch new traces",
@@ -234,7 +234,7 @@ app.layout = html.Div([
         dismissable=True,
         icon="danger",
         # top: 66 positions the toast below the navbar
-        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
+        style={"position": "fixed", "top": 10, "left": 10, "width": 200, "z-index":9999},
     ),
     dbc.Toast(
         "Unable to fetch new histograms",
@@ -244,7 +244,7 @@ app.layout = html.Div([
         dismissable=True,
         icon="danger",
         # top: 66 positions the toast below the navbar
-        style={"position": "fixed", "top": 10, "left": 10, "width": 350, "z-index":9999},
+        style={"position": "fixed", "top": 10, "left": 10, "width": 200, "z-index":9999},
     ),
     dbc.Collapse([
         html.Div([
