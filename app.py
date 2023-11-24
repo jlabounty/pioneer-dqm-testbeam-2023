@@ -15,6 +15,7 @@ import hist
 import os
 import flask
 import pandas 
+import time
 
 # db access
 # import psycopg2
@@ -506,9 +507,10 @@ def update_run_tracker(data):
     run = data['run']
     subrun = data['subRun']
     event = data['event']
+    trace_recieve_time = data['time']
     return [
-        html.P(f"Run/Subrun: {run}/{subrun}"),
-        html.P(f"Event: {event}"),
+        html.P(f"Run/Event: {run}/{event}"),
+        html.P(f"Last event recieved: {trace_recieve_time}"),
     ]
 
 

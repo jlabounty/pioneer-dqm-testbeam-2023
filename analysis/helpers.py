@@ -152,6 +152,7 @@ def process_raw(data, subtract_pedestals=True):
             # print(len(output[name]))
             output[name.replace("traces_", 'n_')] = len(output[name])
     # print(output.keys())
+    output['time'] = time.strftime('%Y-%m-%d %H:%M:%S')
     return output
 
 def process_trends(data):
@@ -330,14 +331,14 @@ def hist_to_plotly_bar(h:hist.Hist,orientation=0,name=None,**kwargs):
     match orientation:
         case 0 | 'v':   
             return go.Bar(
-                x = h.axes[0].centers[::-1],
+                x = h.axes[0].centers,
                 y = h.values(),
                 name=name,
                 **kwargs
             )
         case 1 | 'h':
             return go.Bar(
-                y = h.axes[0].centers[::-1],
+                y = h.axes[0].centers,
                 x = h.values(),
                 orientation='h',
                 name=name,
