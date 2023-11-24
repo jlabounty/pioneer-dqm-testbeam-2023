@@ -107,7 +107,18 @@ def update_t0_trace(data):
                 x=samples,
                 y=t0_trace,
                 # label=f'T0 {i}'
-                name = names[i]
+                name = 'T0'
+                # orientation='h'
+            ),
+        )
+    for i,t0_trace in enumerate(data['traces_veto']):
+        samples = list(range(len(t0_trace)))
+        fig.add_trace(
+            go.Scatter(
+                x=samples,
+                y=t0_trace,
+                # label=f'T0 {i}'
+                name = 'Veto'
                 # orientation='h'
             ),
         )

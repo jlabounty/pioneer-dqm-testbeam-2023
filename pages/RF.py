@@ -27,15 +27,19 @@ layout = html.Div([
     Input('traces', 'data')
 )
 def update_rf_trace(data):
+    print("processing rf data...")
+    print(f'{data.keys()=}')
+    print(f"{len(data['traces_rf'])=}")
     fig = plotly.subplots.make_subplots()
     for i,t0_trace in enumerate(data['traces_rf']):
+        print(i, t0_trace)
         samples = list(range(len(t0_trace)))
         fig.add_trace(
             go.Scatter(
                 x=samples,
                 y=t0_trace,
                 # label=f'T0 {i}'
-                name='RF'
+                # name='RF'
                 # orientation='h'
             ),
         )
