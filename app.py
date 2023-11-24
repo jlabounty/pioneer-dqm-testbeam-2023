@@ -509,8 +509,8 @@ def update_run_tracker(data):
     event = data['event']
     trace_recieve_time = data['time']
     return [
-        html.P(f"Run/Event: {run}/{event}"),
-        html.P(f"Last event recieved: {trace_recieve_time}"),
+        html.P(f"Run/Event: {run}/{event}",style={'color':'white'}),
+        html.P(f"Last event recieved: {trace_recieve_time}",style={'color':'white'}),
     ]
 
 
