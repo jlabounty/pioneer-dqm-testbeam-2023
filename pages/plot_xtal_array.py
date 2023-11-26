@@ -32,6 +32,11 @@ layout = html.Div([
             dbc.Col([dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),], width='auto'),
             dbc.Col([dcc.Graph(id="hodo-hist", style={'display': 'inline-block'}),], width='auto'),
         ]),
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(id="albedo-array", style={'display': 'inline-block'}),
+            ])
+        ])
     ]),
 ])
 
@@ -291,7 +296,7 @@ def update_nai(data):
     # if value not in options:
     #     return
     fig = plotly.subplots.make_subplots(
-        rows=4, cols=1,
+        rows=2, cols=1,
         shared_xaxes='all',
         shared_yaxes='all',
         # print_grid=True,
@@ -300,6 +305,29 @@ def update_nai(data):
     for i, tracei in enumerate(data['traces_nai']):
         samples = list(range(len(tracei)))
         fig.add_trace(go.Scatter(x=samples, y=tracei, name=f'NaI {i}'), row=i+1, col=1 )
+    return fig
+
+@callback(
+    Output("albedo-array", "figure"), 
+    Input('traces', 'data')
+)
+def update_albedo(data):
+    # return f'You have selected {value}'
+    # if value not in options:
+    #     return
+    fig = plotly.subplots.make_subplots(
+        rows=2, cols=1,
+        shared_xaxes='all',
+        # shared_yaxes='all',
+        # print_grid=True,
+    )
+
+    for i, tracei in enumerate(data['traces_s1']):
+        samples = list(range(len(tracei)))
+        fig.add_trace(go.Scatter(x=samples, y=tracei, name=f'S1'), row=i+1, col=1 )
+    for i, tracei in enumerate(data['traces_s2']):
+        samples = list(range(len(tracei)))
+        fig.add_trace(go.Scatter(x=samples, y=tracei, name=f'S2'), row=i+2, col=1 )
     return fig
 
 
@@ -332,13 +360,13 @@ def update_hodo_hist(data):
     # print(hi./values())
 
     fig.add_trace(
-        helpers.hist_to_plotly_bar(hi.project(0)),
+        helpers.hist_to_plotly_bar(hi.project(1)),
         row = 1, col=2
     )
 
     fig.add_trace(
         helpers.hist_to_plotly_bar(
-            hi.project(1),
+            hi.project(0),
             orientation='h',
         ),
         row = 2, col=1
