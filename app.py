@@ -807,6 +807,9 @@ if __name__ == '__main__':
         case 'pioneer-nuci':
             print("Warning: you should be running this with gunicorn")
             app.run(debug=True) #debug mode
+        case 'cenpa-pioneer':
+            print("Warning: you should be running this with gunicorn")
+            app.run(debug=False, port=8052) #debug mode
         case _:
             raise NotImplementedError
 
