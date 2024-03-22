@@ -24,6 +24,10 @@ match os.uname()[1]:
         ONLINE_DIR = None
         BASE_DIR = '/home/pioneer/dqm/nearline/'
         LOG_DIR = '/home/pioneer/dqm/nearline_logs/'
+    case 'cenpa-pioneer':
+        ONLINE_DIR = '/home/pioneer/pioneer/pioneer-teststand/online/'
+        BASE_DIR = '/data1/nearline/'
+        LOG_DIR = '/data1/nearline_logs/'
     case _:
         raise NotImplementedError
 # ----------------------------------------------------------
