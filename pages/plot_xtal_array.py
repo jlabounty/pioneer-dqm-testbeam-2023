@@ -130,6 +130,8 @@ def update_graph(data, xlow, xhigh, ylow, yhigh, options):
     }
 
     for i in range(10):
+        if i >= len(data['traces_lyso']):
+            break
         samples = list(range(len(data['traces_lyso'][i])))
         fig.add_trace(
             go.Scatter(

@@ -15,47 +15,56 @@ dash.register_page(__name__, path='/')
 layout = html.Div([
     # html.H4('Plot an array of traces'),
     dbc.Row([
-        dbc.Col([
-            dcc.Graph(id="t0-trace" , style={'display': 'inline-block'}),
-            # dcc.Graph(id="rf-trace" , style={'display': 'inline-block'})
-        ],width='auto'),
+        # dbc.Col([
+        #     dcc.Graph(id="t0-trace" , style={'display': 'inline-block'}),
+        #     # dcc.Graph(id="rf-trace" , style={'display': 'inline-block'})
+        # ],width='auto'),
         dbc.Col([
             dcc.Graph(id="trace-array", style={'display': 'inline-block'}),
         ],width='auto')
     ]),
+    # dbc.Row([
+    #     dbc.Col([
+    #         dcc.Graph(id="t0-trace" , style={'display': 'inline-block'}),
+    #         # dcc.Graph(id="rf-trace" , style={'display': 'inline-block'})
+    #     ],width='auto'),
+    #     dbc.Col([
+    #         dcc.Graph(id="trace-array", style={'display': 'inline-block'}),
+    #     ],width='auto')
+    # ]),
     # dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
-    dbc.Row([
-        dbc.Col([
-            dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
-        ], width='auto'),
-        dbc.Col([
-            dcc.Graph(id="albedo-array", style={'display': 'inline-block'}),
-        ], width='auto'),
-    ]),
-    dbc.Row([
-        dbc.Col([
-            dcc.Graph(id="rf-trace" , style={'display': 'inline-block'}),
-        ], width='auto'),
-        dbc.Col([
-            dcc.Graph(id="led-monitor-trace", style={'display': 'inline-block'}),
-        ], width='auto'),
-    ]),
-    dbc.Row([
-        dbc.Col([
-            dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
-        ], width='auto'),
-        dbc.Col([
-            dcc.Graph(id="hodo-traces"),
-        ], width='auto'),
-    ]),
-    dbc.Row([
-        dbc.Col([
-            dcc.Graph(id="hodo-hist" , style={'display': 'inline-block'}),
-        ], width='auto'),
-        dbc.Col([
-            dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
-        ], width='auto'),
-    ]),
+    # dbc.Row([
+    #     dbc.Col([
+    #         dcc.Graph(id="nai-array", style={'display': 'inline-block'}),
+    #     ], width='auto'),
+    #     dbc.Col([
+    #         dcc.Graph(id="albedo-array", style={'display': 'inline-block'}),
+    #     ], width='auto'),
+    # ]),
+    # dbc.Row([
+    #     dbc.Col([
+    #         dcc.Graph(id="rf-trace" , style={'display': 'inline-block'}),
+    #     ], width='auto'),
+    #     dbc.Col([
+    #         dcc.Graph(id="led-monitor-trace", style={'display': 'inline-block'}),
+    #     ], width='auto'),
+    # ]),
+    # dbc.Row([
+    #     dbc.Col([
+    #         dcc.Graph(id="hodo-bar", style={'display': 'inline-block'}),
+    #     ], width='auto'),
+    #     dbc.Col([
+    #         dcc.Graph(id="hodo-traces"),
+    #     ], width='auto'),
+    # ]),
+    # dbc.Row([
+    #     dbc.Col([
+    #         dcc.Graph(id="hodo-hist" , style={'display': 'inline-block'}),
+    #     ], width='auto'),
+    #     dbc.Col([
+    #         dcc.Graph(id="hodo-array" , style={'display': 'inline-block'}),
+    #     ], width='auto'),
+    # ]),
 ])
 
 @callback(

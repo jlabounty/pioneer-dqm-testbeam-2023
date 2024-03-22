@@ -32,16 +32,21 @@ def update_dropdown_choices(data):
     # print(f'Updating options...')
     options = []
     # print(data.keys())
-    for i in range(data['n_lyso']):
-        options.append(f'LYSO {i}')
-    for i in range(data['n_hodo_x']):
-        options.append(f'Hodoscope X {i}')
-    for i in range(data['n_hodo_y']):
-        options.append(f'Hodoscope Y {i}')
-    for i in range(data['n_nai']):
-        options.append(f'NaI {i}')
-    for i in range(data['n_t0']):
-        options.append(f'T0 {i}')
+    if 'n_lyso' in data:
+        for i in range(data['n_lyso']):
+            options.append(f'LYSO {i}')
+    if 'n_hodo_x' in data:
+        for i in range(data['n_hodo_x']):
+            options.append(f'Hodoscope X {i}')
+    if 'n_hodo_y' in data:
+        for i in range(data['n_hodo_y']):
+            options.append(f'Hodoscope Y {i}')
+    if 'n_nai' in data:
+        for i in range(data['n_nai']):
+            options.append(f'NaI {i}')
+    if 'n_t0' in data:
+        for i in range(data['n_t0']):
+            options.append(f'T0 {i}')
     # print(f'   -> {options=}')
     return options
 

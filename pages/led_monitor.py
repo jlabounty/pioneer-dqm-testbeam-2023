@@ -26,8 +26,9 @@ layout = html.Div([
 )
 def update_led_monitor_trace(data):
     fig = plotly.subplots.make_subplots()
+    print(data.keys())
     for i,trace in enumerate(data['traces_monitor']):
-        # data['integrals_monitor']
+        print(f"{data['integrals_monitor']=}")
         samples = list(range(len(trace)))
         fig.add_trace(
             go.Scatter(
